@@ -1,0 +1,581 @@
+{
+  "version": "1.0",
+  "standard": "FIDIC Red Book 1999 / 2017",
+  "rules": [
+    {
+      "id": "FIDIC-001",
+      "title": "Contract Price & Payment Terms",
+      "clause_1999": "14.1",
+      "clause_2017": "14.1",
+      "weight": 5,
+      "category": "Payment",
+      "employer_focus": "Verify payment schedule, milestone triggers, and interim payment certificate timelines are clearly defined and enforceable.",
+      "contractor_focus": "Verify your right to interim payments, payment certificate timelines, and consequences of late payment including financing charges.",
+      "compliance_indicators": [
+        "Contract price clearly stated",
+        "Payment schedule defined with milestone triggers",
+        "Interim payment certificate timeline specified",
+        "Late payment interest or remedy stated",
+        "Currency and exchange rate provisions present"
+      ],
+      "red_flags_employer": [
+        "Payment triggered by subjective Employer satisfaction rather than objective milestones",
+        "No Engineer obligation to issue certificates within defined period",
+        "Currency provisions absent in cross-border contracts"
+      ],
+      "red_flags_contractor": [
+        "Payment period exceeds 56 days from Engineer certificate",
+        "No financing charges for late payment",
+        "Employer right to withhold payment without Engineer certification"
+      ],
+      "corrective_language": "The Engineer shall issue an Interim Payment Certificate within 28 days of receiving a Statement. The Employer shall pay within 56 days of the Engineer receiving the Statement. If payment is delayed, financing charges at the rate of [LIBOR/SOFR + 3%] per annum shall apply.",
+      "financial_exposure": "Late or withheld payment on GCC mega-projects can create cash flow crises. Contractor financing costs on delayed payments of USD 10M at 8% per annum equal USD 800,000 annually."
+    },
+    {
+      "id": "FIDIC-002",
+      "title": "Contractor Rights to Suspend Works",
+      "clause_1999": "16.1",
+      "clause_2017": "16.1",
+      "weight": 3,
+      "category": "Payment",
+      "employer_focus": "Ensure suspension rights are conditional on proper notice and defined non-payment thresholds to prevent frivolous suspension claims.",
+      "contractor_focus": "Verify your right to suspend is clearly preserved after 21 days of non-payment following notice, with cost and time entitlement on resumption.",
+      "compliance_indicators": [
+        "21-day notice period before suspension stated",
+        "Contractor entitlement to costs on suspension confirmed",
+        "Contractor entitlement to EOT on suspension confirmed",
+        "Resumption obligations defined",
+        "Contractor termination right after prolonged suspension stated"
+      ],
+      "red_flags_employer": [
+        "Suspension rights removed entirely",
+        "Notice period extended beyond 21 days without compensation",
+        "No defined resumption obligation"
+      ],
+      "red_flags_contractor": [
+        "Suspension right conditional on Employer consent",
+        "No cost entitlement on valid suspension",
+        "No termination right after 84 days of suspension"
+      ],
+      "corrective_language": "If the Employer fails to comply with Clause 14.7, the Contractor may, after giving not less than 21 days notice to the Employer, suspend work or reduce the rate of work. The Contractor shall be entitled to an extension of time and additional costs incurred by reason of such suspension.",
+      "financial_exposure": "Removal of suspension rights eliminates a critical contractor lever. Continued mobilisation without payment on a USD 50M contract can generate USD 500,000 to USD 1.5M monthly cash burn."
+    },
+    {
+      "id": "FIDIC-003",
+      "title": "Extension of Time for Completion",
+      "clause_1999": "8.4",
+      "clause_2017": "8.5",
+      "weight": 5,
+      "category": "Extension of Time",
+      "employer_focus": "Ensure EOT triggers are limited to defined events only. Verify notification windows are enforceable. Confirm Engineer has structured response obligation.",
+      "contractor_focus": "Verify all standard EOT trigger events are preserved. Confirm 28-day notification window. Verify Engineer cannot unreasonably withhold EOT determination.",
+      "compliance_indicators": [
+        "EOT trigger events listed and comprehensive",
+        "28-day notification window preserved",
+        "Engineer response obligation and timeline defined",
+        "Concurrent delay provisions addressed",
+        "Exceptional adverse weather defined and included"
+      ],
+      "red_flags_employer": [
+        "Notification window reduced below 28 days",
+        "EOT trigger events narrowed removing legitimate Employer-risk events",
+        "No Engineer response deadline allowing indefinite delay of determination",
+        "Force majeure excluded from EOT triggers"
+      ],
+      "red_flags_contractor": [
+        "Notification window reduced to 7 days or less",
+        "Concurrent delay clause eliminates all contractor EOT entitlement",
+        "Employer-caused delays excluded from EOT triggers",
+        "Time at large risk not addressed"
+      ],
+      "corrective_language": "The Contractor shall be entitled to an extension of time if completion is or will be delayed by: (a) a Variation; (b) a cause of delay giving entitlement under a Sub-Clause of these Conditions; (c) exceptionally adverse climatic conditions; (d) Unforeseeable shortages; or (e) any delay caused by the Employer or Engineer. Notice shall be given within 28 days of awareness. The Engineer shall respond within 42 days.",
+      "financial_exposure": "A 7-day notification window on a complex GCC project makes time bar almost inevitable on Employer-caused delays. If time at large is argued successfully in ICC arbitration, liquidated damages become unenforceable. On a USD 100M project with USD 100,000 per day LD, this represents an uncapped exposure."
+    },
+    {
+      "id": "FIDIC-004",
+      "title": "Variation Orders & Valuation",
+      "clause_1999": "13.1",
+      "clause_2017": "13.1",
+      "weight": 3,
+      "category": "Variations",
+      "employer_focus": "Ensure variation instruction rights are preserved without contractor veto. Verify valuation methodology is objective and Engineer-led.",
+      "contractor_focus": "Verify right to object to variations that cannot be executed. Confirm valuation methodology includes overhead and profit. Verify omission-to-benefit-third-party restriction.",
+      "compliance_indicators": [
+        "Employer right to instruct variations confirmed",
+        "Contractor right to object on reasonable grounds preserved",
+        "Valuation methodology clearly defined",
+        "Dayworks provision included",
+        "Prohibition on omission to give work to third party stated"
+      ],
+      "red_flags_employer": [
+        "Contractor veto on variations without qualification",
+        "Valuation methodology absent allowing disputes",
+        "No dayworks schedule included"
+      ],
+      "red_flags_contractor": [
+        "Overhead and profit excluded from variation valuation",
+        "No right to object to impossible variations",
+        "Omissions can be reassigned to third parties"
+      ],
+      "corrective_language": "The Engineer may instruct Variations at any time prior to issuing the Taking-Over Certificate. The Contractor shall not omit any work except by a Variation instruction. Each Variation shall be valued at the rates in the Contract, or if not applicable, at rates agreed or determined by the Engineer including reasonable overhead and profit.",
+      "financial_exposure": "Variation valuation disputes are the most common source of GCC construction arbitration. Absence of a clear valuation methodology can result in disputed claims representing 10-20% of contract value."
+    },
+    {
+      "id": "FIDIC-005",
+      "title": "Termination by Employer",
+      "clause_1999": "15.2",
+      "clause_2017": "15.2",
+      "weight": 5,
+      "category": "Termination",
+      "employer_focus": "Verify defined grounds for termination exist, notice-to-correct periods are preserved, and post-termination cost recovery mechanisms are clear.",
+      "contractor_focus": "Verify termination grounds are specific and not open-ended. Confirm 14-day notice-to-correct period. Verify payment on termination includes work done and plant on site.",
+      "compliance_indicators": [
+        "Termination grounds specifically listed",
+        "14-day notice to correct period preserved",
+        "Post-termination completion rights defined",
+        "Payment on termination mechanism stated",
+        "Insolvency as termination ground included"
+      ],
+      "red_flags_employer": [
+        "Termination clause absent entirely",
+        "Termination grounds vague or undefined",
+        "No cost recovery mechanism post termination"
+      ],
+      "red_flags_contractor": [
+        "Termination for convenience without fair payment",
+        "No notice-to-correct period before termination",
+        "Post-termination payment excludes loss of profit"
+      ],
+      "corrective_language": "The Employer shall be entitled to terminate the Contract if the Contractor: (a) fails to comply with a notice to correct within 14 days; (b) abandons the Works; (c) becomes insolvent; (d) gives or offers a bribe. On termination, the Employer may complete the Works and recover excess costs from the Contractor after accounting for amounts due.",
+      "financial_exposure": "Absence of a termination clause means any termination issued becomes wrongful termination by default. A wrongful termination claim on a USD 50M contract typically includes loss of profit on remaining works (10-15%) plus demobilisation costs, potentially USD 7-10M in exposure."
+    },
+    {
+      "id": "FIDIC-006",
+      "title": "Termination by Contractor",
+      "clause_1999": "16.2",
+      "clause_2017": "16.2",
+      "weight": 5,
+      "category": "Termination",
+      "employer_focus": "Verify contractor termination rights are limited to defined grounds with proper notice requirements to prevent opportunistic termination.",
+      "contractor_focus": "Verify your right to terminate for sustained non-payment, prolonged suspension, or Employer insolvency, with full payment including loss of profit.",
+      "compliance_indicators": [
+        "Contractor termination grounds defined",
+        "Notice period before termination stated",
+        "Payment on termination includes profit on unexecuted works",
+        "Prolonged suspension as termination ground included",
+        "Employer insolvency as termination ground included"
+      ],
+      "red_flags_employer": [
+        "Contractor termination grounds overly broad",
+        "No notice period requirement before contractor termination",
+        "Loss of profit payable on termination for convenience"
+      ],
+      "red_flags_contractor": [
+        "Contractor termination rights removed",
+        "Non-payment not listed as termination ground",
+        "No loss of profit payable on valid termination"
+      ],
+      "corrective_language": "The Contractor may terminate the Contract if the Employer fails to pay amounts due within 42 days after the expiry of the payment period, or if the Works are suspended for more than 84 days. On termination, the Employer shall pay the Contract Price attributable to work executed plus reasonable profit on unexecuted work.",
+      "financial_exposure": "Removal of contractor termination rights traps the contractor in a non-performing contract. Continued mobilisation against a non-paying employer can generate monthly losses of 2-5% of monthly contract value with no exit mechanism."
+    },
+    {
+      "id": "FIDIC-007",
+      "title": "Contractor Claims Notification & Time Bar",
+      "clause_1999": "20.1",
+      "clause_2017": "20.1",
+      "weight": 5,
+      "category": "Claims",
+      "employer_focus": "Ensure time bar is clearly defined with specific trigger date, consequences of late notification stated, and ongoing events addressed.",
+      "contractor_focus": "Verify 28-day notification window from awareness not event. Confirm ongoing events clause. Verify time bar consequence does not eliminate underlying entitlement for Employer-caused events.",
+      "compliance_indicators": [
+        "28-day notification window specified",
+        "Clock start date defined clearly",
+        "Ongoing events clause present",
+        "Full claim submission deadline stated",
+        "Time bar consequence clearly stated"
+      ],
+      "red_flags_employer": [
+        "Clock start date undefined allowing open-ended claims",
+        "No time bar consequence stated",
+        "Ongoing events not addressed allowing accumulating claims"
+      ],
+      "red_flags_contractor": [
+        "Notification window reduced below 28 days",
+        "Time bar eliminates entitlement for Employer-caused events",
+        "No ongoing events provision",
+        "Awareness standard replaced with event date only"
+      ],
+      "corrective_language": "The Contractor shall give notice to the Engineer as soon as practicable and not later than 28 days after the Contractor became aware, or should have become aware, of the event. If the Contractor fails to give notice within 28 days, the Time for Completion shall not be extended and the Contractor shall not be entitled to additional payment. For continuing events, monthly notices shall be submitted.",
+      "financial_exposure": "An ambiguous time bar in ICC arbitration is routinely interpreted in favour of the claimant. Without a clear clock start date, the time bar provides no protection. Unmanaged claims on GCC infrastructure projects have historically reached 15-25% of contract value."
+    },
+    {
+      "id": "FIDIC-008",
+      "title": "Dispute Avoidance and Adjudication Board",
+      "clause_1999": "20.2",
+      "clause_2017": "21.1",
+      "weight": 5,
+      "category": "Dispute Resolution",
+      "employer_focus": "Verify DAAB appointment timeline, decision binding nature, and failure to comply with DAAB decision as grounds for immediate arbitration.",
+      "contractor_focus": "Verify DAAB is mandatory not optional, appointment is joint not unilateral, and decisions are immediately binding pending arbitration.",
+      "compliance_indicators": [
+        "DAAB appointment timeline defined",
+        "DAAB mandate clearly stated",
+        "Decision binding nature confirmed",
+        "Notice of dissatisfaction period stated",
+        "Arbitration institution and rules specified"
+      ],
+      "red_flags_employer": [
+        "DAAB made optional, removing mandatory first tier",
+        "Employer unilateral right to appoint DAAB members",
+        "Arbitration clause designates inconvenient seat"
+      ],
+      "red_flags_contractor": [
+        "DAAB removed entirely collapsing to direct arbitration",
+        "DAAB decisions not binding pending arbitration",
+        "Notice of dissatisfaction period shortened below 28 days"
+      ],
+      "corrective_language": "The Parties shall jointly appoint a DAAB within 28 days of the Commencement Date. The DAAB shall visit the Site regularly. DAAB decisions shall be binding on both Parties who shall promptly comply pending arbitration. A Party may give Notice of Dissatisfaction within 28 days of receiving a decision.",
+      "financial_exposure": "Removal of DAAB collapses dispute resolution to direct arbitration. ICC arbitration on a USD 20M dispute typically costs USD 1-3M in fees and takes 2-4 years. DAAB resolution costs a fraction and resolves in weeks."
+    },
+    {
+      "id": "FIDIC-009",
+      "title": "Insurance Requirements",
+      "clause_1999": "18.1",
+      "clause_2017": "19.1",
+      "weight": 3,
+      "category": "Insurance",
+      "employer_focus": "Verify required insurances are listed with minimum coverage amounts, Employer named as additional insured, and evidence of insurance required before commencement.",
+      "contractor_focus": "Verify insurance requirements are commercially achievable, coverage amounts are proportionate to contract value, and Employer cannot unilaterally change requirements.",
+      "compliance_indicators": [
+        "Works insurance coverage defined",
+        "Third party liability coverage stated",
+        "Personnel insurance required",
+        "Evidence of insurance before commencement required",
+        "Cross liability waiver included"
+      ],
+      "red_flags_employer": [
+        "No minimum coverage amounts stated",
+        "Employer not named as additional insured",
+        "No requirement to provide evidence before commencement"
+      ],
+      "red_flags_contractor": [
+        "Coverage amounts disproportionate to contract value",
+        "Employer right to unilaterally increase coverage requirements",
+        "No cross liability waiver"
+      ],
+      "corrective_language": "Before the Commencement Date, the Contractor shall effect and maintain insurances including: (a) Works insurance for full replacement value; (b) Third party liability of not less than [USD amount]; (c) Employer's liability and workers' compensation as required by law. The Employer shall be named as additional insured on all policies.",
+      "financial_exposure": "Inadequate insurance on a GCC construction project can leave uninsured losses of tens of millions. A fire or collapse event without adequate works insurance creates direct loss to whichever party bears the risk under the contract."
+    },
+    {
+      "id": "FIDIC-010",
+      "title": "Defects Liability Period & Notification",
+      "clause_1999": "11.1",
+      "clause_2017": "11.1",
+      "weight": 3,
+      "category": "Defects Liability",
+      "employer_focus": "Verify DLP duration is appropriate, Employer right to notify defects is clearly preserved, and contractor obligation to remedy within defined period is stated.",
+      "contractor_focus": "Verify DLP duration is not excessive, latent defect liability is time-limited, and Performance Certificate issued promptly after DLP expiry.",
+      "compliance_indicators": [
+        "DLP duration clearly stated",
+        "Defect notification mechanism defined",
+        "Contractor remedy obligation and timeline stated",
+        "Performance Certificate issuance obligation stated",
+        "Latent defects period defined"
+      ],
+      "red_flags_employer": [
+        "DLP extended beyond 24 months without justification",
+        "No contractor remedy timeline creating open-ended obligation",
+        "Performance Certificate withheld without reason"
+      ],
+      "red_flags_contractor": [
+        "DLP duration unlimited or undefined",
+        "No Performance Certificate mechanism releasing contractor",
+        "Latent defect liability extends beyond reasonable period"
+      ],
+      "corrective_language": "The Contractor shall complete outstanding work and remedy defects notified during the Defects Notification Period of [365] days. The Engineer shall issue the Performance Certificate within 28 days of expiry of the DLP confirming that the Contractor has completed all obligations. The Performance Certificate constitutes the only approval of the Works.",
+      "financial_exposure": "An undefined DLP exposes the contractor to perpetual liability. Retention held against an open DLP on a USD 20M contract at 5% retention equals USD 1M held indefinitely."
+    },
+    {
+      "id": "FIDIC-011",
+      "title": "Force Majeure & Exceptional Events",
+      "clause_1999": "19.1",
+      "clause_2017": "18.1",
+      "weight": 3,
+      "category": "Force Majeure",
+      "employer_focus": "Verify force majeure definition is not overly broad, notification requirements are clear, and prolonged force majeure termination rights are balanced.",
+      "contractor_focus": "Verify force majeure includes natural disasters, war, and government actions. Confirm EOT entitlement. Verify cost entitlement for specific events.",
+      "compliance_indicators": [
+        "Force majeure definition present",
+        "Notification requirement stated",
+        "EOT entitlement on force majeure confirmed",
+        "Cost entitlement for specific events stated",
+        "Prolonged force majeure termination right included"
+      ],
+      "red_flags_employer": [
+        "Force majeure definition so broad it covers normal commercial risk",
+        "No notification requirement allowing retrospective claims",
+        "No cap on force majeure cost entitlement"
+      ],
+      "red_flags_contractor": [
+        "Force majeure excludes government actions relevant to GCC projects",
+        "No cost entitlement even for Employer-risk force majeure events",
+        "Prolonged force majeure termination right removed"
+      ],
+      "corrective_language": "Force Majeure means an exceptional event beyond a Party's control that was unforeseeable, unavoidable, and not substantially attributable to the other Party. The affected Party shall give notice within 14 days. The Contractor shall be entitled to an extension of time and, for events listed in Sub-Clause 19.4, additional cost.",
+      "financial_exposure": "GCC projects face specific force majeure risks including government policy changes, regional conflict, and pandemic-level disruptions. Without adequate force majeure provisions, contractors absorb costs that should be Employer-risk events."
+    },
+    {
+      "id": "FIDIC-012",
+      "title": "Engineer Authority & Impartiality",
+      "clause_1999": "3.1",
+      "clause_2017": "3.1",
+      "weight": 3,
+      "category": "Administration",
+      "employer_focus": "Ensure Engineer authority is clearly defined, determination process is structured, and Engineer acts as contract administrator not Employer agent.",
+      "contractor_focus": "Verify Engineer has genuine determination authority independent of Employer instruction. Confirm Engineer response deadlines. Verify Engineer cannot override FIDIC entitlements.",
+      "compliance_indicators": [
+        "Engineer authority clearly defined",
+        "Engineer impartiality obligation stated",
+        "Engineer determination process defined",
+        "Response timelines for Engineer decisions stated",
+        "Employer right to replace Engineer with notice stated"
+      ],
+      "red_flags_employer": [
+        "Engineer acts as pure Employer agent with no independent role",
+        "No structured determination process",
+        "Engineer replacement without notice to Contractor"
+      ],
+      "red_flags_contractor": [
+        "Engineer determination subject to Employer approval",
+        "No Engineer response deadlines",
+        "Engineer authority to override FIDIC entitlements"
+      ],
+      "corrective_language": "The Engineer shall act as a skilled professional. When making determinations under Clause 3.5, the Engineer shall consult with each Party and make a fair determination in accordance with the Contract. The Engineer shall respond to Contractor submissions within 28 days unless a longer period is agreed.",
+      "financial_exposure": "An Engineer acting purely as Employer agent eliminates the administrative balance of the FIDIC framework. All determinations become potentially biased, driving every dispute to DAAB or arbitration with associated costs."
+    },
+    {
+      "id": "FIDIC-013",
+      "title": "Taking Over Certificate & Completion",
+      "clause_1999": "10.1",
+      "clause_2017": "10.1",
+      "weight": 3,
+      "category": "Completion",
+      "employer_focus": "Verify Taking Over Certificate triggers end of Contractor risk for the Works. Confirm Employer cannot unreasonably withhold issuance.",
+      "contractor_focus": "Verify Taking Over Certificate triggers end of insurance obligations, transfers care of Works to Employer, and stops LD accrual.",
+      "compliance_indicators": [
+        "Taking Over Certificate issuance obligation stated",
+        "Engineer response deadline to Taking Over application defined",
+        "Risk transfer on Taking Over confirmed",
+        "LD cessation on Taking Over stated",
+        "Partial Taking Over provisions included"
+      ],
+      "red_flags_employer": [
+        "No obligation to issue Taking Over Certificate",
+        "Taking Over subject to subjective Employer satisfaction",
+        "LDs continue to accrue after practical completion"
+      ],
+      "red_flags_contractor": [
+        "Taking Over Certificate withheld for minor defects",
+        "No partial Taking Over for completed sections",
+        "No deemed Taking Over after prolonged Engineer inaction"
+      ],
+      "corrective_language": "The Engineer shall issue the Taking-Over Certificate within 28 days after receiving the Contractor's application if the Works are substantially complete. If the Engineer fails to act within 28 days, the Taking-Over Certificate shall be deemed to have been issued on the date the Works were substantially complete.",
+      "financial_exposure": "Delayed Taking Over Certificate means LDs continue to accrue on a completed project. On a USD 100M project with USD 150,000 per day LDs, a 30-day delay in issuing the certificate equals USD 4.5M of unwarranted LD exposure."
+    },
+    {
+      "id": "FIDIC-014",
+      "title": "Interim Payment Certificates & Retention",
+      "clause_1999": "14.3",
+      "clause_2017": "14.3",
+      "weight": 5,
+      "category": "Payment",
+      "employer_focus": "Verify interim payment process is clear, retention percentage and release mechanism are defined, and Engineer certification obligation is stated.",
+      "contractor_focus": "Verify retention percentage does not exceed 5%, first half release on Taking Over is automatic, and second half release on Performance Certificate is stated.",
+      "compliance_indicators": [
+        "Interim payment application process defined",
+        "Engineer certification timeline stated",
+        "Retention percentage defined",
+        "Retention release mechanism stated",
+        "Minimum payment amount threshold defined"
+      ],
+      "red_flags_employer": [
+        "Retention percentage exceeds 10%",
+        "Retention release subject to Employer discretion not Engineer certificate",
+        "No Engineer certification timeline"
+      ],
+      "red_flags_contractor": [
+        "Retention exceeds 5% of contract value",
+        "Retention release tied to conditions beyond DLP expiry",
+        "No mechanism for retention bond in lieu of cash retention"
+      ],
+      "corrective_language": "The Employer shall retain [5%] of each interim payment up to a maximum of [5%] of the Contract Price. One half of the retention shall be certified for payment in the Taking-Over Certificate. The remainder shall be certified in the Performance Certificate. The Contractor may substitute a retention bond for cash retention.",
+      "financial_exposure": "Retention held at 10% instead of 5% on a USD 50M contract equals USD 2.5M additional cash withheld. Over a 24-month DLP, the financing cost to the contractor at 8% per annum equals USD 200,000 of pure financing cost on excess retention."
+    },
+    {
+      "id": "FIDIC-015",
+      "title": "Subcontracting Obligations",
+      "clause_1999": "4.4",
+      "clause_2017": "4.4",
+      "weight": 1,
+      "category": "Subcontracting",
+      "employer_focus": "Verify Contractor remains fully responsible for all Subcontractor performance. Confirm approval process for Subcontractors is defined.",
+      "contractor_focus": "Verify Subcontractor approval cannot be unreasonably withheld. Confirm Employer-nominated Subcontractors carry appropriate risk transfer.",
+      "compliance_indicators": [
+        "Contractor liability for Subcontractor acts confirmed",
+        "Subcontractor approval process defined",
+        "Nominated Subcontractor provisions included",
+        "Subcontractor payment obligations stated",
+        "Domestic Subcontractor list provisions included if applicable"
+      ],
+      "red_flags_employer": [
+        "Contractor not fully liable for Subcontractor performance",
+        "No approval process for critical Subcontractors"
+      ],
+      "red_flags_contractor": [
+        "Employer can withhold Subcontractor approval unreasonably",
+        "Nominated Subcontractors carry risk that should transfer to Employer"
+      ],
+      "corrective_language": "The Contractor shall not subcontract the whole of the Works. The Contractor shall be responsible for all Subcontractors acts and omissions as if they were the acts of the Contractor. The Contractor shall not subcontract any part of the Works without the prior consent of the Engineer, which shall not be unreasonably withheld.",
+      "financial_exposure": "Inadequate subcontracting provisions create gaps in liability chains. If a Subcontractor defaults and the Contractor is not clearly liable, the Employer bears uninsured losses for delayed or defective work."
+    },
+    {
+      "id": "FIDIC-016",
+      "title": "Programme & Progress Reporting",
+      "clause_1999": "8.3",
+      "clause_2017": "8.3",
+      "weight": 2,
+      "category": "Programme",
+      "employer_focus": "Verify programme submission timeline, Engineer review and consent obligations, and consequences of programme non-submission are defined.",
+      "contractor_focus": "Verify programme consent cannot be unreasonably withheld and programme revision rights are preserved following change events.",
+      "compliance_indicators": [
+        "Programme submission timeline defined",
+        "Engineer review period stated",
+        "Programme content requirements specified",
+        "Revised programme obligations on change events stated",
+        "Progress reporting frequency defined"
+      ],
+      "red_flags_employer": [
+        "No consequence for failure to submit programme",
+        "Engineer programme consent with no timeline creating indefinite review"
+      ],
+      "red_flags_contractor": [
+        "Programme consent treated as approval of method preventing claims",
+        "No right to revise programme after change events"
+      ],
+      "corrective_language": "The Contractor shall submit a detailed programme within 28 days of the Commencement Date. The programme shall show the order and timing of all activities. The Engineer shall review and respond within 21 days. If the Engineer raises no objection, the programme shall be accepted. The Contractor shall revise the programme on any event causing delay.",
+      "financial_exposure": "Absence of an agreed programme eliminates the baseline for delay analysis. Without a programme baseline, EOT claims cannot be properly quantified and are routinely rejected or undervalued."
+    },
+    {
+      "id": "FIDIC-017",
+      "title": "Liquidated Damages for Delay",
+      "clause_1999": "8.7",
+      "clause_2017": "8.8",
+      "weight": 5,
+      "category": "Extension of Time",
+      "employer_focus": "Verify LD rate is stated, cap on LDs is defined, and LD clause does not prevent termination for prolonged delay.",
+      "contractor_focus": "Verify LD rate is the Employer's sole remedy for delay, LD cap is reasonable, and LDs cease on Taking Over.",
+      "compliance_indicators": [
+        "LD rate per day clearly stated",
+        "LD cap as percentage of Contract Price defined",
+        "LDs as sole remedy for delay confirmed",
+        "LD cessation on Taking Over stated",
+        "Milestone LDs if applicable defined"
+      ],
+      "red_flags_employer": [
+        "No LD cap exposing Contractor to unlimited liability",
+        "LD rate not stated leaving damages at large",
+        "LDs do not constitute sole remedy for delay"
+      ],
+      "red_flags_contractor": [
+        "No LD cap or cap exceeds 20% of contract value",
+        "LDs continue to accrue after Taking Over",
+        "General damages reserved in addition to LDs"
+      ],
+      "corrective_language": "If the Contractor fails to comply with the Time for Completion, the Contractor shall pay liquidated damages at the rate stated in the Contract Data for every day of delay. The total amount of liquidated damages shall not exceed the maximum stated in the Contract Data. Payment of liquidated damages shall be the Employer's only remedy for the Contractor's failure to complete on time.",
+      "financial_exposure": "Uncapped LDs on a USD 100M project with USD 150,000 per day LD rate reach the contract value in under 2 years of delay. Uncapped LD exposure drives contractor insolvency and project abandonment — the worst outcome for both parties."
+    },
+    {
+      "id": "FIDIC-018",
+      "title": "Labour & Workforce Compliance",
+      "clause_1999": "6.1",
+      "clause_2017": "6.1",
+      "weight": 1,
+      "category": "Labour",
+      "employer_focus": "Verify Contractor compliance obligations for labour law, working hours, accommodation standards, and GCC Saudization or Emiratization requirements where applicable.",
+      "contractor_focus": "Verify Employer-imposed labour requirements are achievable and any additional compliance costs are recoverable as a Variation.",
+      "compliance_indicators": [
+        "Labour law compliance obligation stated",
+        "Working hours restrictions defined",
+        "Accommodation standards referenced",
+        "Health and safety obligations stated",
+        "Local content or nationalisation requirements stated if applicable"
+      ],
+      "red_flags_employer": [
+        "No labour compliance obligation on Contractor",
+        "GCC regulatory requirements not referenced"
+      ],
+      "red_flags_contractor": [
+        "Employer-imposed labour standards exceeding statutory requirements without compensation",
+        "Saudization or Emiratization targets that are commercially unachievable"
+      ],
+      "corrective_language": "The Contractor shall comply with all applicable labour laws including working hour restrictions, minimum wage requirements, accommodation standards, and health and safety regulations. Where applicable, the Contractor shall meet local content requirements as specified in the Contract Data. Any change in statutory requirements after the Base Date shall entitle the Contractor to a Variation.",
+      "financial_exposure": "Labour compliance failures on GCC projects attract regulatory fines, stop-work orders, and reputational damage. Saudization non-compliance fines under the Nitaqat system can reach SAR 10,000 per worker per month."
+    },
+    {
+      "id": "FIDIC-019",
+      "title": "Materials & Quality Standards",
+      "clause_1999": "7.1",
+      "clause_2017": "7.1",
+      "weight": 2,
+      "category": "Quality",
+      "employer_focus": "Verify material standards are specified by reference to recognised standards, testing obligations are defined, and Contractor bears cost of rejected materials.",
+      "contractor_focus": "Verify material standards are achievable in GCC market, testing regime is proportionate, and Engineer approval cannot be unreasonably withheld.",
+      "compliance_indicators": [
+        "Material standards specified by reference to recognised standards",
+        "Testing and inspection regime defined",
+        "Contractor obligation for rejected materials stated",
+        "Engineer inspection rights without hindrance confirmed",
+        "Samples and shop drawings submission process defined"
+      ],
+      "red_flags_employer": [
+        "Material standards defined subjectively without reference to recognised standards",
+        "No testing regime allowing disputes over quality"
+      ],
+      "red_flags_contractor": [
+        "Material standards reference unavailable specifications",
+        "Testing regime disproportionate to contract value",
+        "Engineer approval withholding rights with no timeline"
+      ],
+      "corrective_language": "Plant and Materials shall be of the quality described in the Specification and shall be new unless the Contract otherwise specifies. The Contractor shall submit samples as required. The Engineer shall inspect and test Plant and Materials at the place of manufacture or on Site. The Contractor shall provide all assistance required for inspection.",
+      "financial_exposure": "Subjective material standards create disputes at every inspection stage. Rejected materials and rework costs on GCC hospitality and infrastructure projects have reached 3-8% of contract value in documented cases."
+    },
+    {
+      "id": "FIDIC-020",
+      "title": "Governing Law & Dispute Seat",
+      "clause_1999": "1.4",
+      "clause_2017": "1.4",
+      "weight": 5,
+      "category": "Dispute Resolution",
+      "employer_focus": "Verify governing law is specified, arbitration seat is commercially practical, arbitration institution and rules are stated, and language of arbitration is defined.",
+      "contractor_focus": "Verify governing law is neutral or familiar, arbitration seat is accessible, and arbitration institution has international enforcement capability.",
+      "compliance_indicators": [
+        "Governing law clearly specified",
+        "Arbitration institution named",
+        "Arbitration rules specified",
+        "Arbitration seat defined",
+        "Language of arbitration and Contract stated"
+      ],
+      "red_flags_employer": [
+        "Governing law conflicts with FIDIC framework principles",
+        "Arbitration seat in jurisdiction unfavourable to enforcement"
+      ],
+      "red_flags_contractor": [
+        "Governing law of Employer country only without neutral option",
+        "Arbitration seat inaccessible or unfamiliar to Contractor",
+        "No arbitration clause defaulting to local courts only"
+      ],
+      "corrective_language": "This Contract shall be governed by and construed in accordance with the laws of [jurisdiction]. Any dispute not resolved by the DAAB shall be finally settled by arbitration under the Rules of the [ICC/DIAC/LCIA]. The seat of arbitration shall be [Dubai/London/Paris]. The language of arbitration shall be English.",
+      "financial_exposure": "An unfavourable governing law or arbitration seat can make an award unenforceable. In GCC cross-border projects, enforcement of an arbitral award in an unfamiliar jurisdiction can add 2-5 years and hundreds of thousands in legal fees beyond the arbitration itself."
+    }
+  ]
+}
