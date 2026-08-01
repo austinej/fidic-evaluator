@@ -1,206 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FIDIC Contract Evaluator</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FIDIC Contracts Evaluator — Module 01 | ContractVault</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <!-- PDF.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  </script>
 </head>
 <body>
 
-<!-- ============ HEADER ============ -->
-<header class="app-header">
-  <div class="logo">⚖️</div>
-  <div>
-    <h1>FIDIC Contract Evaluator</h1>
-    <p>GCC Construction Contract Compliance & Risk Intelligence</p>
-  </div>
-</header>
+  <!-- ── NAVBAR ── -->
+  <nav class="cv-nav">
+    <a href="https://contractvault.netlify.app" class="nav-back-btn">← Back to ContractVault</a>
+    <div class="nav-logo">Contract<span>Vault</span></div>
+    <div class="nav-module-tag">Module 01 — FIDIC Evaluator</div>
+  </nav>
 
-<!-- ============ SCREEN 1: SETUP ============ -->
-<div id="screen-setup" class="screen active">
-  <div class="container">
+  <!-- ── MAIN WRAPPER ── -->
+  <main class="cv-main">
 
-    <!-- API Key -->
-    <div class="card">
-      <div class="card-title">🔑 OpenAI API Key</div>
-      <div class="api-key-row">
-        <input type="password" id="api-key-input" placeholder="sk-proj-..." autocomplete="off">
-        <button id="save-key-btn" class="btn-secondary">Save</button>
-      </div>
-      <p style="font-size:12px; color:#5a6a7a; margin-top:10px;">
-        Your key is stored only in your browser. It is never sent to any server other than OpenAI.
-      </p>
-    </div>
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SCREEN 1 — SETUP                                       -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <section id="screen-setup">
 
-    <!-- Mode Selection -->
-    <div class="card">
-      <div class="card-title">🎯 Select Evaluation Mode</div>
-      <div class="mode-grid">
-        <button class="mode-btn" data-mode="employer">
-          <div class="mode-icon">🏗️</div>
-          <div>Employer Mode</div>
-          <div class="mode-desc">Review contractor submissions and protect Employer interests</div>
-        </button>
-        <button class="mode-btn" data-mode="contractor">
-          <div class="mode-icon">🔨</div>
-          <div>Contractor Mode</div>
-          <div class="mode-desc">Review Employer draft contracts and protect Contractor rights</div>
-        </button>
+      <!-- Hero Header -->
+      <div class="module-hero">
+        <div class="module-badge">⚖️ Module 01</div>
+        <h1 class="module-title">FIDIC Contracts <span class="gold">Evaluator</span></h1>
+        <p class="module-sub">Upload any FIDIC contract. Our AI analyses all 20 critical clauses against the Red Book 1999/2017 standard — identifying risks, gaps, and non-conformances.</p>
       </div>
 
-      <div class="card-title" style="margin-top:8px;">🌍 Select Regulatory Overlay</div>
-      <div class="overlay-grid">
-        <button class="overlay-btn active" data-overlay="pure-fidic">Pure FIDIC Red Book</button>
-        <button class="overlay-btn" data-overlay="saudi-aramco">FIDIC + Saudi Aramco SCAI</button>
-        <button class="overlay-btn" data-overlay="neom">FIDIC + NEOM Framework</button>
-        <button class="overlay-btn" data-overlay="adcc">FIDIC + ADCC Standards</button>
-      </div>
-    </div>
+      <!-- Setup Card -->
+      <div class="setup-card">
 
-    <!-- File Upload -->
-    <div class="card">
-      <div class="card-title">📄 Upload Contract PDF</div>
-      <div id="drop-zone" class="drop-zone">
-        <div class="dz-icon">📄</div>
-        <div class="dz-title">Drop your contract PDF here</div>
-        <div class="dz-sub">or click to browse · PDF files only</div>
-      </div>
-      <input type="file" id="file-input" accept=".pdf" class="hidden">
-    </div>
-
-    <button id="analyse-btn" class="btn-primary">▶ &nbsp; Analyse Contract Against FIDIC Standards</button>
-
-  </div>
-</div>
-
-<!-- ============ SCREEN 2: PROGRESS ============ -->
-<div id="screen-progress" class="screen">
-  <div class="container">
-    <div class="card">
-      <div class="card-title">🔍 Analysing Your Contract</div>
-
-      <div class="progress-meta">
-        <span id="progress-filename">—</span>
-        <span id="progress-mode">—</span>
-        <span id="progress-overlay">—</span>
-      </div>
-
-      <div class="progress-bar-wrap">
-        <div id="progress-bar-fill" class="progress-bar-fill" style="width:0%"></div>
-      </div>
-
-      <div class="progress-label">
-        <span id="progress-count">0 of 20 rules checked</span>
-      </div>
-
-      <div id="current-rule-text" class="progress-label">
-        Preparing analysis...
-      </div>
-
-      <div id="rule-progress-list" class="rule-progress-list"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ============ SCREEN 3: REPORT ============ -->
-<div id="screen-report" class="screen">
-  <div class="container">
-
-    <!-- Report Header -->
-    <div class="card" style="background: linear-gradient(135deg, #1a3a5c, #2d5986); color: white; border: none;">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
-        <div>
-          <div style="font-size:20px; font-weight:800; margin-bottom:6px;">FIDIC Compliance Report</div>
-          <div style="opacity:0.85; font-size:14px;" id="report-filename">—</div>
-          <div style="opacity:0.75; font-size:13px; margin-top:4px;" id="report-mode">—</div>
+        <!-- Step 1 — Mode -->
+        <div class="setup-section">
+          <div class="setup-step-label">
+            <span class="step-num">01</span>
+            <span class="step-title">Select Evaluation Mode</span>
+          </div>
+          <p class="step-desc">Choose your perspective — who is reviewing the contract?</p>
+          <div class="mode-buttons">
+            <button id="btn-employer" class="mode-btn" onclick="selectMode('EMPLOYER')">
+              <span class="mode-icon">🏗️</span>
+              <span class="mode-name">Employer Mode</span>
+              <span class="mode-desc">Review contractor submissions & obligations</span>
+            </button>
+            <button id="btn-contractor" class="mode-btn" onclick="selectMode('CONTRACTOR')">
+              <span class="mode-icon">🔨</span>
+              <span class="mode-name">Contractor Mode</span>
+              <span class="mode-desc">Assess employer draft & protect your rights</span>
+            </button>
+          </div>
         </div>
-        <div style="opacity:0.75; font-size:12px; text-align:right;">
-          Generated by FIDIC Contract Evaluator<br>
-          FIDIC Red Book 1999 / 2017
+
+        <!-- Step 2 — Overlay -->
+        <div class="setup-section">
+          <div class="setup-step-label">
+            <span class="step-num">02</span>
+            <span class="step-title">Select Standard Overlay</span>
+          </div>
+          <p class="step-desc">Pure FIDIC is active by default. GCC overlays coming in Phase 2.</p>
+          <div class="overlay-buttons">
+            <button class="overlay-btn overlay-active" data-overlay="NONE">Pure FIDIC Red Book</button>
+            <button class="overlay-btn overlay-disabled" data-overlay="SCAI" title="Coming Soon">FIDIC + Saudi Aramco SCAI</button>
+            <button class="overlay-btn overlay-disabled" data-overlay="NEOM" title="Coming Soon">FIDIC + NEOM</button>
+            <button class="overlay-btn overlay-disabled" data-overlay="ADCC" title="Coming Soon">FIDIC + ADCC</button>
+          </div>
+          <p class="overlay-note">🔒 GCC Overlays — Phase 2 (Coming Soon)</p>
+        </div>
+
+        <!-- Step 3 — Upload -->
+        <div class="setup-section">
+          <div class="setup-step-label">
+            <span class="step-num">03</span>
+            <span class="step-title">Upload Your Contract</span>
+          </div>
+          <p class="step-desc">Text-based PDF only. Maximum 20MB. Your contract is never stored.</p>
+
+          <div id="drop-zone" class="drop-zone">
+            <input type="file" id="file-input" accept=".pdf" style="display:none"/>
+            <div class="drop-icon">📄</div>
+            <div class="drop-text">Drop your contract PDF here</div>
+            <div class="drop-subtext">or click to browse</div>
+          </div>
+
+          <div id="file-status" class="file-status"></div>
+        </div>
+
+        <!-- Analyse Button -->
+        <div class="analyse-row">
+          <button id="btn-analyse" class="btn-analyse" disabled>
+            ▶&nbsp; Analyse Contract
+          </button>
+          <p class="analyse-note">Select a mode and upload a contract to enable analysis.</p>
+        </div>
+
+      </div><!-- /setup-card -->
+
+      <!-- Info Strip -->
+      <div class="info-strip">
+        <div class="info-item">
+          <span class="info-icon">⚖️</span>
+          <span>FIDIC Red Book 1999 / 2017</span>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">🧠</span>
+          <span>20 Rules · Dual Mode · Risk-Weighted</span>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">🔒</span>
+          <span>Contract never uploaded to any server</span>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">📊</span>
+          <span>Downloadable PDF Report</span>
         </div>
       </div>
-    </div>
 
-    <!-- Summary Cards -->
-    <div class="summary-grid">
-      <div class="summary-card score-card" id="score-card" data-tooltip="Click to see where you lost points">
-        <div class="sc-label">Weighted Score</div>
-        <div class="sc-value">—</div>
-        <div class="sc-sub">of 100%</div>
+    </section><!-- /screen-setup -->
+
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SCREEN 2 — PROGRESS                                    -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <section id="screen-progress" style="display:none">
+
+      <div class="progress-hero">
+        <div class="module-badge">🔄 Analysis in Progress</div>
+        <h2 class="progress-title">Evaluating Your Contract</h2>
+        <p class="progress-sub">AI is checking each FIDIC clause. This takes 60–120 seconds for 20 rules.</p>
       </div>
-      <div class="summary-card risk-high" id="risk-card" data-tooltip="Click to see what is driving this risk level">
-        <div class="sc-label">Risk Level</div>
-        <div class="sc-value">—</div>
-        <div class="sc-sub">—</div>
+
+      <div class="progress-card">
+
+        <div class="progress-header">
+          <span id="progress-count" class="progress-count">0 of 20 rules checked</span>
+          <span id="progress-text" class="progress-pct">0%</span>
+        </div>
+
+        <div id="progress-bar" class="progress-bar-track">
+          <div id="progress-fill" class="progress-bar-fill" style="width:0%"></div>
+        </div>
+
+        <div class="current-rule-label">Currently checking:</div>
+        <div id="current-rule" class="current-rule-text">Initialising analysis engine...</div>
+
+        <ul id="progress-list" class="progress-rule-list"></ul>
+
       </div>
-      <div class="summary-card critical-card" id="critical-card" data-tooltip="Click to see what makes these critical">
-        <div class="sc-label">Critical Gaps</div>
-        <div class="sc-value">—</div>
-        <div class="sc-sub">High-weight failures</div>
+
+    </section><!-- /screen-progress -->
+
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- SCREEN 3 — REPORT                                      -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <section id="screen-report" style="display:none">
+
+      <!-- Report Header -->
+      <div class="report-hero">
+        <div class="module-badge">📊 Compliance Report</div>
+        <div class="report-score-block">
+          <div id="report-score" class="report-score-num">—</div>
+          <div id="report-score-label" class="report-score-label">—</div>
+        </div>
+        <h2 class="report-title">FIDIC Red Book Analysis</h2>
+        <div class="report-meta-row">
+          <span class="report-meta-item">🎯 <strong id="report-mode">—</strong></span>
+          <span class="report-meta-item">📄 <strong id="report-file">—</strong></span>
+          <span class="report-meta-item">📅 <strong id="report-date">—</strong></span>
+        </div>
       </div>
-      <div class="summary-card missing-card" id="missing-card" data-tooltip="Click to see which clauses are completely absent">
-        <div class="sc-label">Missing Clauses</div>
-        <div class="sc-value">—</div>
-        <div class="sc-sub">Clauses not found</div>
+
+      <!-- Executive Summary -->
+      <div class="report-card">
+        <div class="report-card-title">📋 Executive Summary</div>
+        <div id="report-summary" class="report-summary-text"></div>
       </div>
-    </div>
 
-    <!-- Full Clause List -->
-    <div class="card">
-      <div class="card-title">📋 Full Clause Assessment — Click Any Row For Details & Solutions</div>
-      <div id="clause-list" class="clause-list"></div>
-    </div>
+      <!-- Lost Points Breakdown -->
+      <div class="report-card">
+        <div class="report-card-title">📉 Where Did Points Go?</div>
+        <div id="lost-points"></div>
+      </div>
 
-    <!-- Actions -->
-    <div class="report-actions">
-      <button class="btn-secondary" id="new-analysis-btn">🔄 &nbsp; Analyse New Contract</button>
-      <button class="btn-primary" onclick="window.print()">📥 &nbsp; Print / Save Report as PDF</button>
-    </div>
+      <!-- Detailed Results -->
+      <div class="report-card">
+        <div class="report-card-title">📑 Clause-by-Clause Analysis</div>
+        <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">Click any row to expand gap details and recommendations. Compliant clauses are collapsed by default.</p>
+        <div id="report-cards"></div>
+      </div>
 
-  </div>
-</div>
+      <!-- Action Buttons -->
+      <div class="report-actions">
+        <button id="btn-download-pdf" class="btn-download">
+          📄 Download PDF Report
+        </button>
+        <button id="btn-new-analysis" class="btn-new-analysis">
+          🔄 New Analysis
+        </button>
+      </div>
 
-<!-- ============ DRAWER OVERLAY ============ -->
-<div id="drawer-overlay" class="drawer-overlay">
-  <div class="drawer">
-    <div class="drawer-header">
-      <div class="drawer-title" id="drawer-title">Detail</div>
-      <button class="drawer-close" id="drawer-close">✕</button>
-    </div>
-    <div id="drawer-content"></div>
-  </div>
-</div>
+      <!-- Footer -->
+      <div class="report-footer">
+        <span>© 2026 Austine Jarome — <strong>ContractVault</strong> Platform</span>
+        <span>Module 01: FIDIC Contracts Evaluator · Powered by GPT-4o</span>
+      </div>
 
-<script src="app.js"></script>
+    </section><!-- /screen-report -->
 
-<script>
-  // Wire up progress screen meta from state
-  document.getElementById('analyse-btn').addEventListener('click', function() {
-    setTimeout(() => {
-      const s = window.state || {};
-      const el = document.getElementById('progress-filename');
-      const em = document.getElementById('progress-mode');
-      const eo = document.getElementById('progress-overlay');
-      if (el) el.textContent = s.fileName || '—';
-      if (em) em.textContent = s.mode === 'employer' ? '🏗️ Employer Mode' : '🔨 Contractor Mode';
-      const overlayLabels = {
-        'pure-fidic': 'Pure FIDIC Red Book',
-        'saudi-aramco': 'FIDIC + Saudi Aramco SCAI',
-        'neom': 'FIDIC + NEOM Framework',
-        'adcc': 'FIDIC + ADCC Standards'
-      };
-      if (eo) eo.textContent = overlayLabels[s.overlay] || 'Pure FIDIC';
-    }, 100);
-  });
-</script>
-<div style="text-align:center; padding:20px; font-size:0.8rem; color:#aaa; margin-top:30px; border-top:1px solid #2a2a3e;">
-  © 2026 Austine Jarome. All rights reserved. | This tool is independent and not affiliated with FIDIC.
-</div>
+  </main><!-- /cv-main -->
+
+  <script src="app.js"></script>
 </body>
 </html>
