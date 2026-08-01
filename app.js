@@ -1,748 +1,720 @@
-// ============================================
-// FIDIC Contract Evaluator - Application Logic
-// ============================================
+// ============================================================
+// CONTRACT VAULT — FIDIC Evaluator | app.js
+// Module 01 | Built by: Austine Jarome | Engine: AI Fiesta
+// Architecture: Browser PDF extraction → Netlify Function → OpenAI GPT-4o
+// Version: 2.0 — Secure (No API key in browser)
+// ============================================================
 
-// ---- State ----
-const state = {
-  apiKey: '',
-  mode: '',
-  overlay: 'pure-fidic',
-  fileName: '',
+'use strict';
+
+// ── PDF.js Configuration ──
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ── App State ──
+const AppState = {
+  mode: null,           // 'EMPLOYER' | 'CONTRACTOR'
+  overlay: 'NONE',      // 'NONE' | 'SCAI' | 'NEOM' | 'ADCC'
   contractText: '',
-  rules: [],
+  contractFileName: '',
+  fidicRules: null,
   results: [],
-  currentScreen: 'setup'
+  complianceScore: 0,
+  isAnalysing: false
 };
 
-// ---- DOM References ----
-const screens = {
-  setup: document.getElementById('screen-setup'),
-  progress: document.getElementById('screen-progress'),
-  report: document.getElementById('screen-report')
-};
-
-// ---- Initialise ----
-document.addEventListener('DOMContentLoaded', async () => {
-  await loadRules();
-  restoreApiKey();
-  setupEventListeners();
-});
-
-async function loadRules() {
-  try {
-    const res = await fetch('fidic-rules.json');
-    const data = await res.json();
-    state.rules = data.rules;
-  } catch (e) {
-    alert('Error loading FIDIC rules. Please refresh the page.');
-  }
-}
-
-function restoreApiKey() {
-  const saved = localStorage.getItem('fidic_api_key');
-  if (saved) {
-    document.getElementById('api-key-input').value = saved;
-    state.apiKey = saved;
-  }
-}
-
-function setupEventListeners() {
-  // API Key
-  document.getElementById('save-key-btn').addEventListener('click', saveApiKey);
+// ── DOM References ──
+const dom = {
+  // Screens
+  screenSetup:    () => document.getElementById('screen-setup'),
+  screenProgress: () => document.getElementById('screen-progress'),
+  screenReport:   () => document.getElementById('screen-report'),
 
   // Mode buttons
-  document.querySelectorAll('.mode-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.mode = btn.dataset.mode;
-    });
-  });
+  btnEmployer:    () => document.getElementById('btn-employer'),
+  btnContractor:  () => document.getElementById('btn-contractor'),
 
   // Overlay buttons
-  document.querySelectorAll('.overlay-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.overlay-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      state.overlay = btn.dataset.overlay;
-    });
-  });
+  overlayBtns:    () => document.querySelectorAll('.overlay-btn'),
 
-  // Drop zone
-  const dropZone = document.getElementById('drop-zone');
-  const fileInput = document.getElementById('file-input');
-
-  dropZone.addEventListener('click', () => fileInput.click());
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-    handleFile(e.dataTransfer.files[0]);
-  });
-
-  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+  // File upload
+  dropZone:       () => document.getElementById('drop-zone'),
+  fileInput:      () => document.getElementById('file-input'),
+  fileStatus:     () => document.getElementById('file-status'),
+  fileName:       () => document.getElementById('file-name'),
 
   // Analyse button
-  document.getElementById('analyse-btn').addEventListener('click', startAnalysis);
+  btnAnalyse:     () => document.getElementById('btn-analyse'),
 
-  // Summary card clicks
-  document.getElementById('score-card').addEventListener('click', () => openDrawer('score'));
-  document.getElementById('risk-card').addEventListener('click', () => openDrawer('risk'));
-  document.getElementById('critical-card').addEventListener('click', () => openDrawer('critical'));
-  document.getElementById('missing-card').addEventListener('click', () => openDrawer('missing'));
+  // Progress screen
+  progressBar:    () => document.getElementById('progress-bar'),
+  progressFill:   () => document.getElementById('progress-fill'),
+  progressText:   () => document.getElementById('progress-text'),
+  progressCount:  () => document.getElementById('progress-count'),
+  progressList:   () => document.getElementById('progress-list'),
+  currentRule:    () => document.getElementById('current-rule'),
 
-  // Drawer close
-  document.getElementById('drawer-close').addEventListener('click', closeDrawer);
-  document.getElementById('drawer-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('drawer-overlay')) closeDrawer();
-  });
+  // Report screen
+  reportScore:    () => document.getElementById('report-score'),
+  reportScoreLabel: () => document.getElementById('report-score-label'),
+  reportMode:     () => document.getElementById('report-mode'),
+  reportFile:     () => document.getElementById('report-file'),
+  reportDate:     () => document.getElementById('report-date'),
+  reportSummary:  () => document.getElementById('report-summary'),
+  reportCards:    () => document.getElementById('report-cards'),
+  lostPoints:     () => document.getElementById('lost-points'),
+  btnNewAnalysis: () => document.getElementById('btn-new-analysis'),
+  btnDownloadPDF: () => document.getElementById('btn-download-pdf'),
+};
 
-  // New analysis
-  document.getElementById('new-analysis-btn').addEventListener('click', resetToSetup);
-}
-
-function saveApiKey() {
-  const key = document.getElementById('api-key-input').value.trim();
-  if (!key.startsWith('sk-')) {
-    alert('Please enter a valid OpenAI API key starting with sk-');
-    return;
-  }
-  state.apiKey = key;
-  localStorage.setItem('fidic_api_key', key);
-  const btn = document.getElementById('save-key-btn');
-  btn.textContent = '✓ Saved';
-  btn.style.background = '#2e7d32';
-  setTimeout(() => { btn.textContent = 'Save'; btn.style.background = ''; }, 2000);
-}
-
-// ---- File Handling ----
-async function handleFile(file) {
-  if (!file || file.type !== 'application/pdf') {
-    alert('Please upload a PDF file.');
-    return;
-  }
-
-  state.fileName = file.name;
-  const dropZone = document.getElementById('drop-zone');
-  dropZone.classList.add('file-loaded');
-  dropZone.innerHTML = `
-    <div class="dz-icon">✅</div>
-    <div class="dz-title">${file.name}</div>
-    <div class="dz-sub">PDF loaded — ${(file.size / 1024).toFixed(0)} KB · Click to change file</div>
-  `;
-
+// ── Load FIDIC Rules JSON ──
+async function loadFidicRules() {
   try {
-    state.contractText = await extractPDFText(file);
-  } catch (e) {
-    alert('Could not read this PDF. Please ensure it is a text-based PDF (not a scanned image).');
-    resetDropZone();
+    const response = await fetch('./fidic-rules.json');
+    if (!response.ok) throw new Error('Could not load fidic-rules.json');
+    const data = await response.json();
+    AppState.fidicRules = data;
+    console.log(`✅ FIDIC Rules loaded: ${data.knowledge_base?.rules?.length || data.rules?.length} rules`);
+  } catch (err) {
+    console.error('Failed to load FIDIC rules:', err);
+    showError('Failed to load FIDIC knowledge base. Please refresh the page.');
   }
 }
 
-async function extractPDFText(file) {
+// ── Mode Selection ──
+function selectMode(mode) {
+  AppState.mode = mode;
+  dom.btnEmployer().classList.toggle('mode-active', mode === 'EMPLOYER');
+  dom.btnContractor().classList.toggle('mode-active', mode === 'CONTRACTOR');
+  checkReadyState();
+}
+
+// ── Overlay Selection ──
+function selectOverlay(overlay) {
+  AppState.overlay = overlay;
+  dom.overlayBtns().forEach(btn => {
+    btn.classList.toggle('overlay-active', btn.dataset.overlay === overlay);
+  });
+}
+
+// ── Check if Analyse button should be enabled ──
+function checkReadyState() {
+  const ready = AppState.mode && AppState.contractText;
+  const btn = dom.btnAnalyse();
+  btn.disabled = !ready;
+  btn.style.opacity = ready ? '1' : '0.45';
+  btn.style.cursor = ready ? 'pointer' : 'not-allowed';
+}
+
+// ── PDF Text Extraction ──
+async function extractTextFromPDF(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = async function(e) {
+    reader.onload = async (e) => {
       try {
         const typedArray = new Uint8Array(e.target.result);
         const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
         let fullText = '';
-        for (let i = 1; i <= Math.min(pdf.numPages, 60); i++) {
+        for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
           const content = await page.getTextContent();
-          fullText += content.items.map(item => item.str).join(' ') + '\n';
+          const pageText = content.items.map(item => item.str).join(' ');
+          fullText += pageText + '\n';
         }
-        resolve(fullText.trim());
+        if (!fullText.trim()) {
+          reject(new Error('No readable text found. This may be a scanned PDF. Please use a text-based PDF.'));
+        } else {
+          resolve(fullText);
+        }
       } catch (err) {
         reject(err);
       }
     };
-    reader.onerror = reject;
+    reader.onerror = () => reject(new Error('Failed to read file'));
     reader.readAsArrayBuffer(file);
   });
 }
 
-function resetDropZone() {
-  state.fileName = '';
-  state.contractText = '';
-  const dropZone = document.getElementById('drop-zone');
-  dropZone.classList.remove('file-loaded');
-  dropZone.innerHTML = `
-    <div class="dz-icon">📄</div>
-    <div class="dz-title">Drop your contract PDF here</div>
-    <div class="dz-sub">or click to browse · PDF files only</div>
-  `;
-}
-
-// ---- Analysis ----
-async function startAnalysis() {
-  if (!state.apiKey) { alert('Please save your OpenAI API key first.'); return; }
-  if (!state.mode) { alert('Please select Employer or Contractor mode.'); return; }
-  if (!state.contractText) { alert('Please upload a contract PDF first.'); return; }
-
-  state.results = [];
-  showScreen('progress');
-  populateProgressList();
-
-  const contractSample = state.contractText.substring(0, 12000);
-
-  for (let i = 0; i < state.rules.length; i++) {
-    const rule = state.rules[i];
-    updateProgressBar(i, state.rules.length);
-    updateCurrentRule(rule, i);
-
-    try {
-      const result = await analyseRule(rule, contractSample);
-      state.results.push(result);
-      updateRuleProgressItem(i, result);
-    } catch (e) {
-      state.results.push({
-        id: rule.id,
-        title: rule.title,
-        weight: rule.weight,
-        category: rule.category,
-        status: 'error',
-        score: 0,
-        summary: 'Analysis error — please retry.',
-        red_flags: [],
-        corrective_action: rule.corrective_language,
-        financial_exposure: rule.financial_exposure
-      });
-      updateRuleProgressItem(i, state.results[state.results.length - 1]);
-    }
-
-    await sleep(600);
+// ── File Handling ──
+function handleFile(file) {
+  if (!file) return;
+  if (file.type !== 'application/pdf') {
+    showFileError('Please upload a PDF file only.');
+    return;
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    showFileError('File too large. Maximum size is 20MB.');
+    return;
   }
 
-  updateProgressBar(state.rules.length, state.rules.length);
-  await sleep(800);
-  buildReport();
-  showScreen('report');
+  dom.fileStatus().innerHTML = `<span class="file-loading">⏳ Reading PDF...</span>`;
+
+  extractTextFromPDF(file)
+    .then(text => {
+      AppState.contractText = text;
+      AppState.contractFileName = file.name;
+      dom.fileStatus().innerHTML = `
+        <span class="file-success">✅ Contract loaded</span>
+        <span id="file-name" class="file-name">${file.name} — ${Math.round(text.length / 1000)}k characters extracted</span>
+      `;
+      checkReadyState();
+    })
+    .catch(err => {
+      showFileError('❌ ' + err.message);
+      AppState.contractText = '';
+      checkReadyState();
+    });
 }
 
-async function analyseRule(rule, contractText) {
-  const focus = state.mode === 'employer'
-    ? rule.employer_focus
-    : rule.contractor_focus;
+function showFileError(msg) {
+  dom.fileStatus().innerHTML = `<span class="file-error">${msg}</span>`;
+}
 
-  const redFlags = state.mode === 'employer'
-    ? rule.red_flags_employer
-    : rule.red_flags_contractor;
+// ── Drag & Drop Setup ──
+function initDropZone() {
+  const zone = dom.dropZone();
+  const input = dom.fileInput();
 
-  const prompt = `You are a senior FIDIC contract expert specialising in GCC construction projects.
+  zone.addEventListener('click', () => input.click());
+  input.addEventListener('change', e => handleFile(e.target.files[0]));
 
-CONTRACT TEXT (extract):
-"""
-${contractText}
-"""
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    zone.classList.add('drag-over');
+  });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    handleFile(e.dataTransfer.files[0]);
+  });
+}
 
-EVALUATION TASK:
-Evaluate this contract against the following FIDIC compliance rule.
-
-Rule ID: ${rule.id}
-Rule Title: ${rule.title}
-FIDIC Clause Reference: ${rule.clause_1999} (1999) / ${rule.clause_2017} (2017)
-Evaluation Mode: ${state.mode === 'employer' ? 'EMPLOYER MODE' : 'CONTRACTOR MODE'}
-Evaluation Focus: ${focus}
-
-Compliance Indicators to check:
-${rule.compliance_indicators.map((c, i) => `${i + 1}. ${c}`).join('\n')}
-
-Red Flags to watch for (${state.mode} perspective):
-${redFlags.map((f, i) => `${i + 1}. ${f}`).join('\n')}
-
-RESPOND WITH VALID JSON ONLY. No explanation before or after. Use this exact structure:
-{
-  "status": "COMPLIANT" or "PARTIAL" or "NON-COMPLIANT" or "MISSING",
-  "score": <integer 0-100>,
-  "summary": "<2-3 sentence plain English summary of what was found>",
-  "what_is_wrong": "<specific explanation of what is wrong or missing — if compliant write 'No issues found'>",
-  "what_it_exposes_you_to": "<plain English explanation of the commercial and legal exposure>",
-  "red_flags_found": ["<specific text or issue found>", "<another issue>"],
-  "corrective_action": "<specific action to take to remedy this gap>",
-  "corrective_language": "<exact clause language to insert or amend>"
-}`;
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+// ── Call Netlify Serverless Function ──
+async function callEvaluateFunction(contractChunk, rule, mode) {
+  const response = await fetch('/.netlify/functions/evaluate', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${state.apiKey}`
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'gpt-4o',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.1,
-      max_tokens: 800
+      contractChunk,
+      rule,
+      mode
     })
   });
 
   if (!response.ok) {
-    const err = await response.json();
-    throw new Error(err.error?.message || 'API error');
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error || `Server error: ${response.status}`);
   }
 
-  const data = await response.json();
-  const content = data.choices[0].message.content.trim();
-
-  const jsonMatch = content.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error('Invalid response format');
-
-  const parsed = JSON.parse(jsonMatch[0]);
-
-  return {
-    id: rule.id,
-    title: rule.title,
-    weight: rule.weight,
-    category: rule.category,
-    clause_1999: rule.clause_1999,
-    clause_2017: rule.clause_2017,
-    status: parsed.status || 'NON-COMPLIANT',
-    score: parseInt(parsed.score) || 0,
-    summary: parsed.summary || '',
-    what_is_wrong: parsed.what_is_wrong || '',
-    what_it_exposes_you_to: parsed.what_it_exposes_you_to || '',
-    red_flags_found: parsed.red_flags_found || [],
-    corrective_action: parsed.corrective_action || rule.corrective_language,
-    corrective_language: parsed.corrective_language || rule.corrective_language,
-    financial_exposure: rule.financial_exposure
-  };
+  return response.json();
 }
 
-// ---- Progress UI ----
-function populateProgressList() {
-  const list = document.getElementById('rule-progress-list');
-  list.innerHTML = state.rules.map((rule, i) => `
-    <div class="rule-progress-item pending" id="rpi-${i}">
+// ── Extract relevant contract chunk for a rule ──
+function extractRelevantChunk(contractText, rule) {
+  // Build search keywords from rule signals
+  const keywords = [
+    rule.title,
+    `clause ${rule.clause_1999}`,
+    `sub-clause ${rule.clause_1999}`,
+    rule.category,
+    ...(rule.evaluation_signals || []).slice(0, 3)
+  ].filter(Boolean);
+
+  // Split text into paragraphs
+  const paragraphs = contractText.split(/\n+/).filter(p => p.trim().length > 20);
+  const scored = paragraphs.map(para => {
+    let score = 0;
+    const lowerPara = para.toLowerCase();
+    keywords.forEach(kw => {
+      if (lowerPara.includes(kw.toLowerCase())) score++;
+    });
+    return { para, score };
+  });
+
+  // Take top 8 most relevant paragraphs
+  const top = scored
+    .filter(p => p.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 8)
+    .map(p => p.para);
+
+  // If nothing found, send first 3000 chars as context
+  if (top.length === 0) {
+    return contractText.substring(0, 3000);
+  }
+
+  return top.join('\n\n').substring(0, 4000);
+}
+
+// ── Calculate Compliance Score ──
+function calculateScore(results, rules) {
+  let totalWeight = 0;
+  let earnedWeight = 0;
+
+  results.forEach((result, idx) => {
+    const rule = rules[idx];
+    if (!rule) return;
+    const weight = rule.risk_weight || rule.weight || 1;
+    totalWeight += weight;
+
+    const score = result.compliance_score || 0;
+    earnedWeight += (score / 100) * weight;
+  });
+
+  return totalWeight > 0 ? Math.round((earnedWeight / totalWeight) * 100) : 0;
+}
+
+// ── Run Analysis ──
+async function runAnalysis() {
+  if (AppState.isAnalysing) return;
+  AppState.isAnalysing = true;
+
+  // Validate
+  if (!AppState.mode) { alert('Please select Employer or Contractor mode.'); AppState.isAnalysing = false; return; }
+  if (!AppState.contractText) { alert('Please upload a contract PDF.'); AppState.isAnalysing = false; return; }
+  if (!AppState.fidicRules) { alert('FIDIC rules not loaded. Please refresh.'); AppState.isAnalysing = false; return; }
+
+  // Get rules array (handle both JSON structures)
+  const rules = AppState.fidicRules.knowledge_base?.rules || AppState.fidicRules.rules || [];
+  if (rules.length === 0) { alert('No FIDIC rules found in knowledge base.'); AppState.isAnalysing = false; return; }
+
+  // Switch to progress screen
+  showScreen('progress');
+  AppState.results = [];
+
+  const progressList = dom.progressList();
+  progressList.innerHTML = '';
+
+  // Pre-populate list items
+  rules.forEach(rule => {
+    const li = document.createElement('li');
+    li.id = `rule-item-${rule.rule_id || rule.id}`;
+    li.className = 'progress-rule-item pending';
+    li.innerHTML = `
       <span class="rule-status-icon">⏳</span>
-      <span class="rule-progress-id">${rule.id}</span>
-      <span class="rule-progress-title">${rule.title}</span>
-      <span class="rule-progress-status">Pending</span>
-    </div>
-  `).join('');
-}
+      <span class="rule-id">${rule.rule_id || rule.id}</span>
+      <span class="rule-title">${rule.title}</span>
+      <span class="rule-result">—</span>
+    `;
+    progressList.appendChild(li);
+  });
 
-function updateProgressBar(done, total) {
-  const pct = Math.round((done / total) * 100);
-  document.getElementById('progress-bar-fill').style.width = pct + '%';
-  document.getElementById('progress-count').textContent = `${done} of ${total} rules checked`;
-}
+  // Process each rule
+  for (let i = 0; i < rules.length; i++) {
+    const rule = rules[i];
+    const ruleId = rule.rule_id || rule.id;
 
-function updateCurrentRule(rule, index) {
-  document.getElementById('current-rule-text').innerHTML =
-    `Currently checking: <strong>${rule.id} — ${rule.title}</strong>`;
+    // Update progress UI
+    const pct = Math.round(((i) / rules.length) * 100);
+    dom.progressFill().style.width = `${pct}%`;
+    dom.progressText().textContent = `${pct}%`;
+    dom.progressCount().textContent = `${i} of ${rules.length} rules checked`;
+    dom.currentRule().textContent = `${ruleId} — ${rule.title}`;
 
-  const item = document.getElementById(`rpi-${index}`);
-  if (item) {
-    item.className = 'rule-progress-item analysing';
-    item.querySelector('.rule-status-icon').textContent = '🔄';
-    item.querySelector('.rule-progress-status').textContent = 'Analysing...';
-    item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    // Mark item as active
+    const listItem = document.getElementById(`rule-item-${ruleId}`);
+    if (listItem) {
+      listItem.className = 'progress-rule-item active';
+      listItem.querySelector('.rule-status-icon').textContent = '🔄';
+      listItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    try {
+      const chunk = extractRelevantChunk(AppState.contractText, rule);
+      const result = await callEvaluateFunction(chunk, rule, AppState.mode);
+
+      AppState.results.push(result);
+
+      // Update list item with result
+      if (listItem) {
+        const status = result.status || 'UNKNOWN';
+        const icons = { COMPLIANT: '✅', PARTIAL: '⚠️', 'NON-COMPLIANT': '❌', MISSING: '🔴', UNKNOWN: '❓' };
+        const classes = { COMPLIANT: 'compliant', PARTIAL: 'partial', 'NON-COMPLIANT': 'non-compliant', MISSING: 'missing', UNKNOWN: 'unknown' };
+        listItem.className = `progress-rule-item done ${classes[status] || ''}`;
+        listItem.querySelector('.rule-status-icon').textContent = icons[status] || '❓';
+        listItem.querySelector('.rule-result').textContent = status;
+      }
+
+    } catch (err) {
+      console.error(`Error on rule ${ruleId}:`, err);
+      AppState.results.push({
+        rule_id: ruleId,
+        title: rule.title,
+        status: 'ERROR',
+        compliance_score: 0,
+        gap_summary: `Analysis failed: ${err.message}`,
+        recommendation: 'Please retry this evaluation.',
+        risk_weight: rule.risk_weight || rule.weight || 1
+      });
+      if (listItem) {
+        listItem.className = 'progress-rule-item done error';
+        listItem.querySelector('.rule-status-icon').textContent = '⚠️';
+        listItem.querySelector('.rule-result').textContent = 'ERROR';
+      }
+    }
+
+    // Small pause between calls
+    await new Promise(r => setTimeout(r, 300));
   }
+
+  // Final progress update
+  dom.progressFill().style.width = '100%';
+  dom.progressText().textContent = '100%';
+  dom.progressCount().textContent = `${rules.length} of ${rules.length} rules checked`;
+  dom.currentRule().textContent = 'Analysis complete — building your report...';
+
+  await new Promise(r => setTimeout(r, 800));
+
+  // Build and show report
+  AppState.complianceScore = calculateScore(AppState.results, rules);
+  buildReport(AppState.results, rules);
+  showScreen('report');
+  AppState.isAnalysing = false;
 }
 
-function updateRuleProgressItem(index, result) {
-  const item = document.getElementById(`rpi-${index}`);
-  if (!item) return;
+// ── Build Report ──
+function buildReport(results, rules) {
+  const score = AppState.complianceScore;
+  const mode = AppState.mode;
 
-  const statusMap = {
-    'COMPLIANT': { cls: 'compliant', icon: '✅', label: 'Compliant' },
-    'PARTIAL': { cls: 'partial', icon: '⚠️', label: 'Partial' },
-    'NON-COMPLIANT': { cls: 'non-compliant', icon: '❌', label: 'Non-Compliant' },
-    'MISSING': { cls: 'missing', icon: '🔴', label: 'Missing' },
-    'error': { cls: 'non-compliant', icon: '⚠️', label: 'Error' }
+  // Score display
+  dom.reportScore().textContent = `${score}%`;
+  dom.reportScoreLabel().textContent = getScoreLabel(score);
+  dom.reportScore().style.color = getScoreColor(score);
+
+  // Meta
+  dom.reportMode().textContent = mode === 'EMPLOYER' ? '🏗️ Employer Mode' : '🔨 Contractor Mode';
+  dom.reportFile().textContent = AppState.contractFileName;
+  dom.reportDate().textContent = new Date().toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  });
+
+  // Executive summary
+  const critical = results.filter(r => r.status === 'MISSING' || r.status === 'NON-COMPLIANT');
+  const partial = results.filter(r => r.status === 'PARTIAL');
+  const compliant = results.filter(r => r.status === 'COMPLIANT');
+
+  dom.reportSummary().innerHTML = `
+    <p>This contract scored <strong>${score}%</strong> compliance against the FIDIC Red Book 1999/2017 standard under <strong>${mode === 'EMPLOYER' ? 'Employer' : 'Contractor'} Mode</strong>.</p>
+    <p style="margin-top:0.5rem;">
+      <strong style="color:#00D4AA">${compliant.length} clauses fully compliant</strong> &nbsp;|&nbsp;
+      <strong style="color:#FFD700">${partial.length} partially compliant</strong> &nbsp;|&nbsp;
+      <strong style="color:#FF4B4B">${critical.length} critical gaps</strong>
+    </p>
+    <p style="margin-top:0.5rem;">${generateSummaryText(score, critical, partial, mode)}</p>
+  `;
+
+  // Result cards
+  const cardsContainer = dom.reportCards();
+  cardsContainer.innerHTML = '';
+  results.forEach((result, idx) => {
+    const rule = rules[idx] || {};
+    cardsContainer.appendChild(buildResultCard(result, rule));
+  });
+
+  // Lost points breakdown
+  buildLostPoints(results, rules);
+}
+
+function generateSummaryText(score, critical, partial, mode) {
+  if (score >= 90) return `Excellent contract compliance. Minor refinements recommended. ${mode === 'CONTRACTOR' ? 'Your rights are broadly protected under FIDIC.' : 'Contractor obligations are well-defined.'}`;
+  if (score >= 75) return `Good baseline compliance with ${critical.length} critical gap${critical.length !== 1 ? 's' : ''} requiring immediate attention before contract execution.`;
+  if (score >= 60) return `Moderate compliance. ${critical.length} critical clause${critical.length !== 1 ? 's are' : ' is'} missing or non-compliant — significant risk exposure if executed as-is.`;
+  if (score >= 40) return `Significant compliance deficiencies identified. This contract carries substantial legal and commercial risk. Amendment is strongly recommended before signing.`;
+  return `Critical compliance failure. This contract deviates materially from FIDIC Red Book standards. Do not execute without comprehensive legal review.`;
+}
+
+function getScoreLabel(score) {
+  if (score >= 90) return 'Excellent';
+  if (score >= 75) return 'Good';
+  if (score >= 60) return 'Moderate';
+  if (score >= 40) return 'Poor';
+  return 'Critical';
+}
+
+function getScoreColor(score) {
+  if (score >= 90) return '#00D4AA';
+  if (score >= 75) return '#FFD700';
+  if (score >= 60) return '#FF8C00';
+  return '#FF4B4B';
+}
+
+function buildResultCard(result, rule) {
+  const statusConfig = {
+    COMPLIANT:      { icon: '✅', cls: 'card-compliant',     label: 'Compliant' },
+    PARTIAL:        { icon: '⚠️', cls: 'card-partial',       label: 'Partial' },
+    'NON-COMPLIANT':{ icon: '❌', cls: 'card-noncompliant',  label: 'Non-Compliant' },
+    MISSING:        { icon: '🔴', cls: 'card-missing',       label: 'Missing' },
+    ERROR:          { icon: '⚠️', cls: 'card-error',         label: 'Error' }
   };
 
-  const s = statusMap[result.status] || statusMap['NON-COMPLIANT'];
-  item.className = `rule-progress-item ${s.cls}`;
-  item.querySelector('.rule-status-icon').textContent = s.icon;
-  item.querySelector('.rule-progress-status').textContent = s.label;
-}
+  const status = result.status || 'UNKNOWN';
+  const cfg = statusConfig[status] || { icon: '❓', cls: '', label: status };
+  const weight = result.risk_weight || rule.risk_weight || rule.weight || 1;
+  const score = result.compliance_score || 0;
+  const clause = result.fidic_clause_1999 || rule.clause_1999 || rule.clause_ref || '—';
 
-// ---- Report Building ----
-function buildReport() {
-  const { weightedScore, maxScore } = calculateWeightedScore();
-  const percentage = Math.round((weightedScore / maxScore) * 100);
-  const riskLevel = getRiskLevel(percentage, state.results);
-  const criticalGaps = state.results.filter(r =>
-    (r.status === 'NON-COMPLIANT' || r.status === 'MISSING') && r.weight >= 4
-  );
-  const missingClauses = state.results.filter(r => r.status === 'MISSING');
-
-  // Set report meta
-  document.getElementById('report-filename').textContent = state.fileName;
-  document.getElementById('report-mode').textContent =
-    state.mode === 'employer' ? '🏗️ Employer Mode' : '🔨 Contractor Mode';
-
-  // Summary cards
-  const scoreCard = document.getElementById('score-card');
-  scoreCard.querySelector('.sc-value').textContent = percentage + '%';
-  scoreCard.querySelector('.sc-sub').textContent = `${Math.round(weightedScore)} of ${maxScore} weighted points`;
-  scoreCard.dataset.tooltip = `Click to see where you lost ${100 - percentage}%`;
-
-  const riskCard = document.getElementById('risk-card');
-  riskCard.querySelector('.sc-value').textContent = riskLevel.label;
-  riskCard.querySelector('.sc-sub').textContent = riskLevel.sub;
-  riskCard.className = `summary-card risk-${riskLevel.class}`;
-  riskCard.dataset.tooltip = 'Click to see what is driving this risk level';
-
-  const critCard = document.getElementById('critical-card');
-  critCard.querySelector('.sc-value').textContent = criticalGaps.length;
-  critCard.querySelector('.sc-sub').textContent = 'High-weight failures';
-  critCard.dataset.tooltip = 'Click to see what makes these critical';
-
-  const missCard = document.getElementById('missing-card');
-  missCard.querySelector('.sc-value').textContent = missingClauses.length;
-  missCard.querySelector('.sc-sub').textContent = 'Clauses not found';
-  missCard.dataset.tooltip = 'Click to see which clauses are completely absent';
-
-  // Store computed data for drawers
-  state.computed = { percentage, weightedScore, maxScore, riskLevel, criticalGaps, missingClauses };
-
-  // Build clause list
-  buildClauseList();
-}
-
-function calculateWeightedScore() {
-  let weightedScore = 0;
-  let maxScore = 0;
-  state.results.forEach(r => {
-    weightedScore += (r.score / 100) * r.weight;
-    maxScore += r.weight;
-  });
-  return { weightedScore, maxScore };
-}
-
-function getRiskLevel(percentage, results) {
-  const criticalFails = results.filter(r =>
-    (r.status === 'NON-COMPLIANT' || r.status === 'MISSING') && r.weight === 5
-  ).length;
-
-  if (criticalFails >= 3 || percentage < 50) return { label: '🔴 HIGH', class: 'high', sub: 'Immediate attention required' };
-  if (criticalFails >= 1 || percentage < 75) return { label: '🟠 MEDIUM', class: 'medium', sub: 'Material gaps identified' };
-  return { label: '🟢 LOW', class: 'low', sub: 'Minor improvements needed' };
-}
-
-function buildClauseList() {
-  const sorted = [...state.results].sort((a, b) => a.score - b.score);
-  const container = document.getElementById('clause-list');
-
-  container.innerHTML = sorted.map((result, i) => {
-    const statusMap = {
-      'COMPLIANT': { cls: 'compliant', icon: '✅' },
-      'PARTIAL': { cls: 'partial', icon: '⚠️' },
-      'NON-COMPLIANT': { cls: 'non-compliant', icon: '❌' },
-      'MISSING': { cls: 'missing', icon: '🔴' },
-      'error': { cls: 'non-compliant', icon: '⚠️' }
-    };
-    const s = statusMap[result.status] || statusMap['NON-COMPLIANT'];
-    const barColor = s.cls;
-
-    return `
-      <div class="clause-row ${s.cls}" id="cr-${i}" onclick="toggleClauseDetail(${i})">
-        <div class="clause-row-header">
-          <span class="cr-icon">${s.icon}</span>
-          <span class="cr-id">${result.id}</span>
-          <span class="cr-title">${result.title}</span>
-          <span class="cr-score">${result.score}%</span>
-          <div class="cr-bar-wrap">
-            <div class="cr-bar">
-              <div class="cr-bar-fill ${barColor}" style="width:${result.score}%"></div>
-            </div>
-          </div>
-          <span class="cr-chevron">▼</span>
-        </div>
-        <div class="clause-detail">
-          ${buildClauseDetail(result)}
+  const card = document.createElement('div');
+  card.className = `result-card ${cfg.cls}`;
+  card.innerHTML = `
+    <div class="card-header">
+      <div class="card-header-left">
+        <span class="card-status-icon">${cfg.icon}</span>
+        <div>
+          <div class="card-rule-id">${result.rule_id || rule.rule_id || rule.id}</div>
+          <div class="card-title">${result.title || rule.title}</div>
         </div>
       </div>
-    `;
-  }).join('');
-}
-
-function buildClauseDetail(result) {
-  const redFlagsHtml = result.red_flags_found && result.red_flags_found.length > 0
-    ? result.red_flags_found.map(f => `<div class="red-flag-item">${escapeHtml(f)}</div>`).join('')
-    : '<div class="red-flag-item">No specific red flags detected</div>';
-
-  return `
-    <div class="cd-section">
-      <div class="cd-section-title">FIDIC Reference</div>
-      <div class="cd-text">FIDIC Clause ${result.clause_1999} (1999) / ${result.clause_2017} (2017) · Weight: ${result.weight}/5 · Category: ${result.category}</div>
-    </div>
-
-    <div class="cd-section">
-      <div class="cd-section-title">What Was Found</div>
-      <div class="cd-text">${escapeHtml(result.summary)}</div>
-    </div>
-
-    ${result.what_is_wrong && result.what_is_wrong !== 'No issues found' ? `
-    <div class="cd-section">
-      <div class="cd-section-title">What Is Wrong</div>
-      <div class="cd-text">${escapeHtml(result.what_is_wrong)}</div>
-    </div>` : ''}
-
-    ${result.what_it_exposes_you_to ? `
-    <div class="cd-section">
-      <div class="cd-section-title">Commercial & Legal Exposure</div>
-      <div class="exposure-box">${escapeHtml(result.what_it_exposes_you_to)}</div>
-    </div>` : ''}
-
-    <div class="cd-section">
-      <div class="cd-section-title">Red Flags Found In Your Contract</div>
-      ${redFlagsHtml}
-    </div>
-
-    <div class="cd-section">
-      <div class="cd-section-title">Financial Exposure</div>
-      <div class="exposure-box">${escapeHtml(result.financial_exposure)}</div>
-    </div>
-
-    <div class="cd-section">
-      <div class="cd-section-title">Corrective Action</div>
-      <div class="cd-text">${escapeHtml(result.corrective_action)}</div>
-    </div>
-
-    <div class="cd-section">
-      <div class="cd-section-title">Recommended Clause Language</div>
-      <div class="corrective-box">
-        <button class="copy-btn" onclick="copyClause(this, event)">📋 Copy</button>
-        ${escapeHtml(result.corrective_language)}
+      <div class="card-header-right">
+        <div class="card-score-circle" style="border-color:${getScoreColor(score)};color:${getScoreColor(score)}">${score}%</div>
+        <div class="card-meta-tags">
+          <span class="tag-clause">Clause ${clause}</span>
+          <span class="tag-weight">Weight: ${weight}/5</span>
+          ${result.confidence ? `<span class="tag-confidence">AI: ${result.confidence}</span>` : ''}
+        </div>
       </div>
+    </div>
+    <div class="card-body">
+      ${result.gap_summary ? `
+        <div class="card-section">
+          <div class="card-section-label">⚡ Gap Analysis</div>
+          <p>${result.gap_summary}</p>
+        </div>` : ''}
+      ${result.recommendation ? `
+        <div class="card-section">
+          <div class="card-section-label">🛡️ Recommendation</div>
+          <p>${result.recommendation}</p>
+        </div>` : ''}
+      ${result.corrective_language ? `
+        <div class="card-section">
+          <div class="card-section-label">📝 Suggested Clause Language</div>
+          <div class="corrective-language">${result.corrective_language}</div>
+        </div>` : ''}
     </div>
   `;
-}
 
-function toggleClauseDetail(index) {
-  const row = document.getElementById(`cr-${index}`);
-  row.classList.toggle('expanded');
-}
-
-function copyClause(btn, event) {
-  event.stopPropagation();
-  const box = btn.parentElement;
-  const text = box.textContent.replace('📋 Copy', '').trim();
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = '✓ Copied';
-    setTimeout(() => { btn.textContent = '📋 Copy'; }, 2000);
+  // Collapsible toggle
+  const header = card.querySelector('.card-header');
+  const body = card.querySelector('.card-body');
+  body.style.display = (status === 'COMPLIANT') ? 'none' : 'block';
+  header.style.cursor = 'pointer';
+  header.addEventListener('click', () => {
+    body.style.display = body.style.display === 'none' ? 'block' : 'none';
   });
+
+  return card;
 }
 
-// ---- Drawers ----
-function openDrawer(type) {
-  const { percentage, weightedScore, maxScore, riskLevel, criticalGaps, missingClauses } = state.computed;
-  const lostPct = 100 - percentage;
-
-  let title = '';
-  let content = '';
-
-  if (type === 'score') {
-    title = `📊 Where You Lost ${lostPct}%`;
-    content = buildScoreDrawer(lostPct);
-  } else if (type === 'risk') {
-    title = `${riskLevel.label} — What Is Driving This Risk`;
-    content = buildRiskDrawer();
-  } else if (type === 'critical') {
-    title = `🔴 Your ${criticalGaps.length} Critical Gap${criticalGaps.length !== 1 ? 's' : ''} — Explained`;
-    content = buildCriticalDrawer(criticalGaps);
-  } else if (type === 'missing') {
-    title = `🟣 Missing Clause${missingClauses.length !== 1 ? 's' : ''} — What Is Completely Absent`;
-    content = buildMissingDrawer(missingClauses);
-  }
-
-  document.getElementById('drawer-title').textContent = title;
-  document.getElementById('drawer-content').innerHTML = content;
-  document.getElementById('drawer-overlay').classList.add('open');
-}
-
-function closeDrawer() {
-  document.getElementById('drawer-overlay').classList.remove('open');
-}
-
-function buildScoreDrawer(lostPct) {
-  const losers = [...state.results]
-    .filter(r => r.score < 100)
-    .sort((a, b) => {
-      const lossA = (1 - a.score / 100) * a.weight;
-      const lossB = (1 - b.score / 100) * b.weight;
-      return lossB - lossA;
+function buildLostPoints(results, rules) {
+  const lostContainer = dom.lostPoints();
+  const gaps = results
+    .map((r, i) => {
+      const rule = rules[i] || {};
+      const weight = r.risk_weight || rule.risk_weight || rule.weight || 1;
+      const maxPoints = weight;
+      const earnedPoints = ((r.compliance_score || 0) / 100) * weight;
+      const lostPts = +(maxPoints - earnedPoints).toFixed(2);
+      return { ...r, lostPts, maxPoints };
     })
-    .slice(0, 8);
+    .filter(r => r.lostPts > 0)
+    .sort((a, b) => b.lostPts - a.lostPts);
 
-  const { maxScore } = state.computed;
-  const totalLossPoints = losers.reduce((sum, r) => sum + (1 - r.score / 100) * r.weight, 0);
+  if (gaps.length === 0) {
+    lostContainer.innerHTML = '<p style="color:#00D4AA;text-align:center;padding:1rem;">🎉 No points lost — perfect compliance!</p>';
+    return;
+  }
 
-  const criticalLosers = losers.filter(r => r.weight >= 5 && r.score < 60);
-  const partialLosers = losers.filter(r => r.weight < 5 || r.score >= 60);
+  lostContainer.innerHTML = `
+    <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">
+      Your weighted compliance score is <strong style="color:var(--gold)">${AppState.complianceScore}%</strong>.
+      Here is exactly where points were lost, ranked by impact.
+    </p>
+    <div class="lost-points-list">
+      ${gaps.map(g => `
+        <div class="lost-item">
+          <span class="lost-rule-id">${g.rule_id}</span>
+          <span class="lost-title">${g.title}</span>
+          <span class="lost-pts" style="color:${getScoreColor(100 - (g.lostPts / g.maxPoints) * 100)}">
+            −${g.lostPts.toFixed(1)} pts
+          </span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
 
-  const lossItems = losers.map(r => {
-    const pointsLost = ((1 - r.score / 100) * r.weight).toFixed(1);
-    const pctLost = Math.round((pointsLost / maxScore) * 100);
-    const isCritical = r.weight >= 5 && r.score < 60;
+// ── PDF Download ──
+function downloadReport() {
+  // Build printable HTML and open in new window for browser print-to-PDF
+  const score = AppState.complianceScore;
+  const mode = AppState.mode;
+  const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  const resultsHTML = AppState.results.map(r => {
+    const statusColors = { COMPLIANT: '#00D4AA', PARTIAL: '#FFD700', 'NON-COMPLIANT': '#FF4B4B', MISSING: '#FF4B4B' };
+    const color = statusColors[r.status] || '#8892B0';
     return `
-      <div class="loss-item ${isCritical ? '' : 'partial'}">
-        <div class="loss-item-header">
-          <span class="loss-item-id">${r.id} — ${r.title}</span>
-          <span class="loss-item-points">−${pctLost}%</span>
-        </div>
-        <div class="loss-item-reason">
-          Weight ${r.weight} × Score ${r.score}% = ${(r.score / 100 * r.weight).toFixed(1)} of ${r.weight} possible points<br>
-          ${escapeHtml(r.what_is_wrong || r.summary)}
-        </div>
-      </div>
+      <tr>
+        <td style="padding:8px;border-bottom:1px solid #1C2540;font-weight:600">${r.rule_id}</td>
+        <td style="padding:8px;border-bottom:1px solid #1C2540">${r.title}</td>
+        <td style="padding:8px;border-bottom:1px solid #1C2540;color:${color};font-weight:700">${r.status}</td>
+        <td style="padding:8px;border-bottom:1px solid #1C2540;color:${color}">${r.compliance_score}%</td>
+        <td style="padding:8px;border-bottom:1px solid #1C2540;font-size:0.85rem">${r.gap_summary || '—'}</td>
+      </tr>
     `;
   }).join('');
 
-  const fixCritical = criticalLosers.length;
-  const scoreAfterFix = Math.min(100, Math.round(state.computed.percentage +
-    criticalLosers.reduce((sum, r) => sum + ((1 - r.score / 100) * r.weight / maxScore) * 100, 0)));
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>ContractVault FIDIC Report — ${AppState.contractFileName}</title>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+      <style>
+        body { font-family: 'Inter', sans-serif; background: #fff; color: #0A0F1E; margin: 0; padding: 40px; }
+        .cv-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:32px; padding-bottom:20px; border-bottom:3px solid #FFD700; }
+        .cv-logo { font-family:'Playfair Display',serif; font-size:28px; font-weight:800; color:#0A0F1E; }
+        .cv-logo span { color:#1E6FFF; }
+        .report-title { font-size:22px; font-weight:700; margin:0 0 8px; }
+        .score-box { font-size:64px; font-weight:800; color:${getScoreColor(score)}; }
+        .meta-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:32px; }
+        .meta-item { background:#F5F7FF; border-radius:8px; padding:12px 16px; }
+        .meta-label { font-size:11px; color:#8892B0; text-transform:uppercase; letter-spacing:1px; }
+        .meta-value { font-weight:700; font-size:14px; margin-top:4px; }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        th { background:#0A0F1E; color:#FFD700; padding:10px 8px; text-align:left; font-weight:600; }
+        .footer { margin-top:40px; padding-top:20px; border-top:1px solid #ddd; font-size:11px; color:#8892B0; display:flex; justify-content:space-between; }
+      </style>
+    </head>
+    <body>
+      <div class="cv-header">
+        <div>
+          <div class="cv-logo">Contract<span>Vault</span></div>
+          <div style="font-size:12px;color:#8892B0;margin-top:4px">Module 01 — FIDIC Contracts Evaluator</div>
+        </div>
+        <div style="text-align:right">
+          <div class="score-box">${score}%</div>
+          <div style="font-size:14px;color:#8892B0">${getScoreLabel(score)} Compliance</div>
+        </div>
+      </div>
 
-  return `
-    <div class="drawer-section">
-      <div class="drawer-section-title">Your score is ${state.computed.percentage}%. Here is where the ${lostPct}% was lost, ranked by impact.</div>
-      ${lossItems}
-    </div>
-    <div class="score-fix-callout">
-      ✅ Fix the ${fixCritical} critical clause${fixCritical !== 1 ? 's' : ''} above and your score rises from ${state.computed.percentage}% to approximately ${scoreAfterFix}%.
-      ${partialLosers.length > 0 ? ` To reach 100%, ${partialLosers.length} further partial gap${partialLosers.length !== 1 ? 's' : ''} also require attention.` : ''}
-    </div>
+      <div class="meta-row">
+        <div class="meta-item">
+          <div class="meta-label">Contract File</div>
+          <div class="meta-value">${AppState.contractFileName}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Evaluation Mode</div>
+          <div class="meta-value">${mode === 'EMPLOYER' ? 'Employer Mode' : 'Contractor Mode'}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Report Date</div>
+          <div class="meta-value">${date}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Standard</div>
+          <div class="meta-value">FIDIC Red Book 1999 / 2017</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Rules Evaluated</div>
+          <div class="meta-value">${AppState.results.length} of 20</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Powered By</div>
+          <div class="meta-value">ContractVault AI Engine</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Rule ID</th>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Score</th>
+            <th>Gap Summary</th>
+          </tr>
+        </thead>
+        <tbody>${resultsHTML}</tbody>
+      </table>
+
+      <div class="footer">
+        <span>© 2026 Austine Jarome — ContractVault Platform. All rights reserved.</span>
+        <span>Generated: ${new Date().toISOString()}</span>
+      </div>
+    </body>
+    </html>
   `;
+
+  const win = window.open('', '_blank');
+  win.document.write(printContent);
+  win.document.close();
+  setTimeout(() => win.print(), 800);
 }
 
-function buildRiskDrawer() {
-  const failedHigh = state.results.filter(r =>
-    (r.status === 'NON-COMPLIANT' || r.status === 'MISSING') && r.weight === 5
-  );
-
-  const causeBlocks = failedHigh.map((r, i) => `
-    <div class="risk-cause-block">
-      <div class="risk-cause-number">Risk Driver ${i + 1}</div>
-      <div class="risk-cause-title">${r.id} — ${r.title} (FIDIC Clause ${r.clause_1999})</div>
-      <div class="risk-cause-body">${escapeHtml(r.what_is_wrong || r.summary)}</div>
-      <div class="risk-cause-result">⚠ Consequence: ${escapeHtml(r.what_it_exposes_you_to || r.financial_exposure)}</div>
-    </div>
-  `).join('');
-
-  const combinedWarning = failedHigh.length >= 2
-    ? `<div class="risk-combined-warning">
-        🔴 <strong>Why this combination matters:</strong><br>
-        These ${failedHigh.length} failures do not sit in isolation. Together they create a contract where ${
-          failedHigh.map(r => r.title.toLowerCase()).join(', ')
-        } are all compromised simultaneously. In a GCC project environment, this combination is the profile seen in contracts that generate the most expensive arbitration outcomes.
-      </div>`
-    : '';
-
-  return `
-    <div class="drawer-section">
-      <div class="drawer-section-title">Your risk level is not caused by one problem. It is caused by this specific combination of high-weight failures.</div>
-      ${causeBlocks}
-      ${combinedWarning}
-    </div>
-  `;
-}
-
-function buildCriticalDrawer(criticalGaps) {
-  if (criticalGaps.length === 0) {
-    return '<div class="drawer-section"><p>No critical gaps identified. Well done.</p></div>';
-  }
-
-  const blocks = criticalGaps.map((r, i) => `
-    <div class="critical-gap-block">
-      <div class="cgb-header">
-        <span>Critical Gap ${i + 1} — ${r.id}: ${r.title}</span>
-        <span>FIDIC Clause ${r.clause_1999}</span>
-      </div>
-      <div class="cgb-body">
-        <div class="cgb-field">
-          <div class="cgb-field-label">What Is Wrong</div>
-          <div class="cgb-field-value">${escapeHtml(r.what_is_wrong || r.summary)}</div>
-        </div>
-        <div class="cgb-field">
-          <div class="cgb-field-label">What This Exposes You To</div>
-          <div class="cgb-field-value">${escapeHtml(r.what_it_exposes_you_to || r.financial_exposure)}</div>
-        </div>
-        <div class="cgb-action">
-          ✅ What To Do: ${escapeHtml(r.corrective_action)}
-        </div>
-      </div>
-    </div>
-  `).join('');
-
-  return `<div class="drawer-section">${blocks}</div>`;
-}
-
-function buildMissingDrawer(missingClauses) {
-  if (missingClauses.length === 0) {
-    return '<div class="drawer-section"><p>No completely missing clauses. All FIDIC provisions are present to some degree.</p></div>';
-  }
-
-  const blocks = missingClauses.map((r, i) => `
-    <div class="critical-gap-block">
-      <div class="cgb-header" style="background: #6a1b9a;">
-        <span>Missing Clause ${i + 1} — ${r.id}: ${r.title}</span>
-        <span>FIDIC Clause ${r.clause_1999}</span>
-      </div>
-      <div class="cgb-body">
-        <div class="cgb-field">
-          <div class="cgb-field-label">Why It Is Critical That This Clause Exists</div>
-          <div class="cgb-field-value">${escapeHtml(r.what_is_wrong || 'This clause could not be located in the contract document.')}</div>
-        </div>
-        <div class="cgb-field">
-          <div class="cgb-field-label">Exposure Without This Clause</div>
-          <div class="cgb-field-value">${escapeHtml(r.what_it_exposes_you_to || r.financial_exposure)}</div>
-        </div>
-        <div class="cgb-field">
-          <div class="cgb-field-label">Recommended Clause Language To Insert</div>
-          <div class="corrective-box" style="position:relative;">
-            <button class="copy-btn" onclick="copyClauseText(this, event, \`${escapeJs(r.corrective_language)}\`)">📋 Copy</button>
-            ${escapeHtml(r.corrective_language)}
-          </div>
-        </div>
-      </div>
-    </div>
-  `).join('');
-
-  return `<div class="drawer-section">${blocks}</div>`;
-}
-
-function copyClauseText(btn, event, text) {
-  event.stopPropagation();
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = '✓ Copied';
-    setTimeout(() => { btn.textContent = '📋 Copy'; }, 2000);
-  });
-}
-
-// ---- Utilities ----
+// ── Screen Navigation ──
 function showScreen(name) {
-  Object.values(screens).forEach(s => s.classList.remove('active'));
-  screens[name].classList.add('active');
-  state.currentScreen = name;
-  window.scrollTo(0, 0);
+  ['setup', 'progress', 'report'].forEach(s => {
+    const el = document.getElementById(`screen-${s}`);
+    if (el) el.style.display = s === name ? 'block' : 'none';
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function resetToSetup() {
-  state.results = [];
-  state.contractText = '';
-  state.fileName = '';
-  resetDropZone();
+  AppState.mode = null;
+  AppState.contractText = '';
+  AppState.contractFileName = '';
+  AppState.results = [];
+  AppState.complianceScore = 0;
+  AppState.isAnalysing = false;
+
+  dom.btnEmployer().classList.remove('mode-active');
+  dom.btnContractor().classList.remove('mode-active');
+  dom.fileStatus().innerHTML = '';
+  dom.overlayBtns().forEach(btn => {
+    btn.classList.toggle('overlay-active', btn.dataset.overlay === 'NONE');
+  });
+  AppState.overlay = 'NONE';
+
+  checkReadyState();
   showScreen('setup');
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+function showError(msg) {
+  alert(msg);
 }
 
-function escapeJs(str) {
-  if (!str) return '';
-  return String(str).replace(/`/g, '\\`').replace(/\$/g, '\\$');
-}
+// ── Initialise App ──
+document.addEventListener('DOMContentLoaded', async () => {
+  // Load FIDIC rules
+  await loadFidicRules();
+
+  // Init drop zone
+  initDropZone();
+
+  // Mode buttons
+  dom.btnEmployer()?.addEventListener('click', () => selectMode('EMPLOYER'));
+  dom.btnContractor()?.addEventListener('click', () => selectMode('CONTRACTOR'));
+
+  // Overlay buttons
+  dom.overlayBtns().forEach(btn => {
+    btn.addEventListener('click', () => selectOverlay(btn.dataset.overlay));
+  });
+
+  // Analyse button
+  dom.btnAnalyse()?.addEventListener('click', runAnalysis);
+
+  // Report actions
+  dom.btnNewAnalysis()?.addEventListener('click', resetToSetup);
+  dom.btnDownloadPDF()?.addEventListener('click', downloadReport);
+
+  // Set default overlay
+  selectOverlay('NONE');
+
+  // Initial state check
+  checkReadyState();
+
+  console.log('✅ ContractVault FIDIC Evaluator v2.0 initialised');
+});
