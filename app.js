@@ -192,7 +192,7 @@ function initDropZone() {
 
 // ── Call Netlify Serverless Function ──
 async function callEvaluateFunction(contractChunk, rule, mode) {
-  const response = await fetch('/.netlify/functions/evaluate', {
+  const response = await fetch('/api/evaluate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
