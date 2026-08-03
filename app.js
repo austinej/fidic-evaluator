@@ -1,7 +1,7 @@
 // ============================================================
 // CONTRACT VAULT — FIDIC Evaluator | app.js
-// Module 01 | Built by: Austine Jarome | Engine: AI Fiesta
-// Architecture: Browser PDF extraction → Netlify Function → OpenAI GPT-4o
+// Module 01 | Built by: Austine Jarome | Engine: Vercel
+// Architecture: Browser PDF extraction → Vercel Function → OpenAI API
 // Version: 2.0 — Secure (No API key in browser)
 // ============================================================
 
